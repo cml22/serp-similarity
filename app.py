@@ -78,6 +78,10 @@ st.write("2. Choose the appropriate language and country for each keyword.")
 st.write("3. Click on the 'Analyze' button to view the results.")
 st.write("4. The tool will display the similarity rate, common URLs, unique URLs for each keyword, and title analysis.")
 
+# Disclaimer
+st.markdown("### Disclaimer")
+st.write("Please note that the title tag alone is not sufficient for effective SEO. Other factors such as content quality, backlinks, and site performance also play crucial roles in search engine rankings.")
+
 # Input for keywords
 col1, col2 = st.columns(2)
 
@@ -108,6 +112,20 @@ if st.button("Analyze"):
         # Display results
         st.subheader("Results")
         st.write(f"Similarity Rate: {similarity_rate:.2f}% ({len(common_urls)} common URLs)")
+
+        # Title recommendation
+        if counts['common_both'] > 0:
+            st.write("### Recommendation")
+            st.write(f"It seems that using both **{keyword1}** and **{keyword2}** in the title is beneficial, as they appear together in the titles of common URLs.")
+        elif counts['common_keyword1'] > counts['common_keyword2']:
+            st.write("### Recommendation")
+            st.write(f"To improve your chances of ranking well, consider using **{keyword1}** in your title.")
+        elif counts['common_keyword2'] > counts['common_keyword1']:
+            st.write("### Recommendation")
+            st.write(f"To improve your chances of ranking well, consider using **{keyword2}** in your title.")
+        else:
+            st.write("### Recommendation")
+            st.write("Consider testing both keywords separately in your title for better optimization.")
 
         st.markdown("### Common URLs")
         for url in common_urls:
