@@ -118,15 +118,17 @@ if st.button("Analyze"):
         # Display results
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
         
-        # Summary on keyword usage
-        if counts['common_both'] > 0:
-            st.success("Both keywords seem to contribute to being a common URL in the title.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"It would be better to include **{keyword1}** in your title to optimize your ranking.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"It would be better to include **{keyword2}** in your title to optimize your ranking.")
-        else:
-            st.info("Neither keyword seems effective alone. Consider other optimizations.")
+# Summary on keyword usage
+if counts['common_both'] > 0:
+    st.success("Les deux mots-clés semblent contribuer à être une URL commune dans le titre.")
+elif keyword1 in keyword2:
+    st.warning(f"**{keyword2}** est plus spécifique que **{keyword1}**. Considérez d'utiliser le mot-clé plus spécifique pour mieux cibler votre audience.")
+elif counts['common_keyword1'] > counts['common_keyword2']:
+    st.warning(f"Il serait préférable d'inclure **{keyword1}** dans votre titre pour optimiser votre classement.")
+elif counts['common_keyword2'] > counts['common_keyword1']:
+    st.warning(f"Il serait préférable d'inclure **{keyword2}** dans votre titre pour optimiser votre classement.")
+else:
+    st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
 
         st.markdown("---")
         st.subheader("SERP Results")
