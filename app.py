@@ -7,7 +7,9 @@ import pycountry
 # Fonction pour obtenir les résultats de recherche
 def get_serp_results(keyword, lang, country):
     url = f"https://www.google.com/search?q={keyword}&hl={lang}&gl={country}"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36"
+    }
     response = requests.get(url, headers=headers)
     
     if response.status_code != 200:
@@ -32,9 +34,10 @@ keyword1 = st.text_input("Entrez le mot-clé 1", "")
 keyword2 = st.text_input("Entrez le mot-clé 2", "")
 
 # Sélecteurs de langue et pays
-languages = [(lang.alpha_2, lang.name) for lang in pycountry.languages]
+languages = [(lang.alpha_2, lang.name) for lang in pycountry.LANGUAGES.values()]
 countries = [(country.alpha_2, country.name) for country in pycountry.countries]
 
+# Ajout des sélecteurs pour les langues
 selected_lang1 = st.selectbox("Langue du mot-clé 1", options=[lang[1] for lang in languages])
 selected_country1 = st.selectbox("Pays du mot-clé 1", options=[country[1] for country in countries])
 
