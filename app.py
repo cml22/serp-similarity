@@ -14,7 +14,7 @@ def scrape_serp(keyword, language, country):
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        st.error("Erreur lors de la récupération des résultats.")
+        st.error("Error while fetching the results.")
         return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -23,7 +23,7 @@ def scrape_serp(keyword, language, country):
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
         if link:
-            title = g.find('h3').get_text() if g.find('h3') else "Titre non trouvé"
+            title = g.find('h3').get_text() if g.find('h3') else "Title not found"
             results.append((link['href'], title))
 
     return results
@@ -61,47 +61,31 @@ def calculate_similarity(results1, results2):
     
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
-# Interface utilisateur avec Streamlit
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
-st.title("Analyse de Similarité SERP")
-st.markdown("---")  # Ligne de séparation
+# User interface with Streamlit
+st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
+st.title("SERP Similarity Analysis")
+st.markdown("---")  # Separator line
 
-# Entrée des mots-clés
+# Input for keywords
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Entrer le Mot-clé 1 :", placeholder="Ex: marketing digital")
-    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
+    language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country1 = st.selectbox("Country (Keyword 1):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
-    keyword2 = st.text_input("Entrer le Mot-clé 2 :", placeholder="Ex: SEO")
-    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
+    language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country2 = st.selectbox("Country (Keyword 2):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
-st.markdown("---")  # Ligne de séparation
+st.markdown("---")  # Separator line
 
-if st.button("Analyser"):
+if st.button("Analyze"):
     if keyword1 and keyword2:
-        # Scraper les résultats pour les deux mots-clés
+        # Scrape results for both keywords
         results_keyword1 = scrape_serp(keyword1, language1, country1)
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
-        # Calculer la similarité
-        common_urls, non_common_urls1, non_common_urls2, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
-
-        # Analyser les titres
-        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
-
-        # Affichage des résultats
-        st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
-        
-        # Résumé sur l'utilisation des mots-clés
-        if counts['common_both'] > 0:
-            st.success("Les deux mots-clés sont présents dans les titres de plusieurs résultats.")
-        else:
-            st.warning("Les deux mots-clés ne sont pas présents dans les titres de résultats communs.")
-
-# Backlink en bas de la page
-st.markdown("---")  # Ligne de séparation
-st.markdown("[Charles Migaud](https://charles-migaud.fr)")
+        # Calculate similarity
+        common
