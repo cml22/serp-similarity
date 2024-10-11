@@ -164,24 +164,12 @@ if st.button("Analyze"):
             rank_keyword2 = next((i + 1 for i, (u, _) in enumerate(results_keyword2) if u == url), "Not Found")
             common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword1, f"Rank in '{keyword2}'": rank_keyword2})
 
-        # Display the table
-        st.table(common_urls_data)
+        # Display number of common URLs
+        st.write(f"**Number of Common URLs: {len(common_urls)}**")
 
         # Create a DataFrame for exporting to CSV
-        df = pd.DataFrame(common_urls_data)
+        df_common = pd.DataFrame(common_urls_data)
 
-        # Button to download the data as CSV
+        # Button to download the common data as CSV
         st.download_button(
-            label="Download CSV",
-            data=df.to_csv(index=False).encode('utf-8'),
-            file_name='serp_similarity_data.csv',
-            mime='text/csv'
-        )
-
-        # Display URLs unique to Keyword 1
-        with st.expander(f"URLs unique to Keyword: {keyword1}"):
-            unique_urls1 = set(urls1.keys()) - common_urls
-            for url in unique_urls1:
-                st.write(url)
-
-        # Display URLs unique to Keyword
+            label="Download Common URLs CSV",
