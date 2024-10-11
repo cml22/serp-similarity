@@ -24,15 +24,17 @@ col1, col2 = st.columns(2)
 with col1:
     keyword1 = st.text_input("Entrez le mot-clé 1", "")
     lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
+    country1 = st.selectbox("Pays du mot-clé 1", options=["FR", "US", "ES", "DE", "IT"], index=0)
 
 with col2:
     keyword2 = st.text_input("Entrez le mot-clé 2", "")
     lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
+    country2 = st.selectbox("Pays du mot-clé 2", options=["FR", "US", "ES", "DE", "IT"], index=0)
 
 if st.button("Analyser"):
     # Scraping des SERPs
-    urls1 = scrape_serp(keyword1, lang1, "FR")
-    urls2 = scrape_serp(keyword2, lang2, "FR")
+    urls1 = scrape_serp(keyword1, lang1, country1)
+    urls2 = scrape_serp(keyword2, lang2, country2)
 
     # Calcul du taux de similarité
     common_urls = list(set(urls1) & set(urls2))
@@ -65,14 +67,4 @@ if st.button("Analyser"):
     st.subheader("Comparaison des SERPs")
     comparison_df = pd.DataFrame({
         'URL': list(set(urls1 + urls2)),
-        'Position Mot-clé 1': [urls1.index(url) + 1 if url in urls1 else None for url in set(urls1 + urls2)],
-        'Position Mot-clé 2': [urls2.index(url) + 1 if url in urls2 else None for url in set(urls1 + urls2)]
-    }).dropna()
-
-    for index, row in comparison_df.iterrows():
-        if row['Position Mot-clé 1'] == row['Position Mot-clé 2']:
-            st.write(f"🔄 {row['URL']} (Stable)")
-        elif row['Position Mot-clé 1'] < row['Position Mot-clé 2']:
-            st.write(f"⬆️ {row['URL']} (Améliorée de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
-        else:
-            st.write(f"⬇️ {row['URL']} (Diminution de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
+        'Position Mot-clé 1': [urls1.inde
