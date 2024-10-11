@@ -98,12 +98,12 @@ if st.button("Analyser"):
         with st.expander("Afficher SERP pour le Mot-clé 1"):
             st.write("**SERP pour le Mot-clé 1**")
             for url, title in results_keyword1:
-                st.write(f"{url}")
+                st.write(f"{url} - {title}")
 
         with st.expander("Afficher SERP pour le Mot-clé 2"):
             st.write("**SERP pour le Mot-clé 2**")
             for url, title in results_keyword2:
-                st.write(f"{url}")
+                st.write(f"{url} - {title}")
 
         # Affichage des URLs communes
         st.write("**URLs communes**")
