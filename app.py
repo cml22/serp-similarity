@@ -1,62 +1,109 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
+import requests  # Assurez-vous que les requêtes HTTP sont gérées selon vos besoins
 
-# Titre de l'application
-st.title("Analyse de Similarité SERP")
+# Fonction pour récupérer les SERPs (simulée)
+def run_serp_analysis(keyword1, keyword2, lang_country_code):
+    # Simulez ici la récupération des SERPs
+    # Remplacez cela par votre logique de scraping ou d'appel d'API
+    return {
+        'keyword1': keyword1,
+        'keyword2': keyword2,
+        'lang_country_code': lang_country_code,
+        'serp1': [f"https://example.com/page1-{i}" for i in range(1, 6)],  # 5 premiers résultats
+        'serp2': [f"https://example.com/page2-{i}" for i in range(1, 6)],  # 5 premiers résultats
+    }
 
-# Entrée des mots-clés
-keyword1 = st.text_input("Entrez le mot-clé 1", "")
-keyword2 = st.text_input("Entrez le mot-clé 2", "")
+# Liste des pays et langues à choisir
+languages_countries = {
+    'fr': 'Français',
+    'en-gb': 'English (UK)',
+    'en': 'English',
+    'en-us': 'English (US)',
+    'fr-ca': 'Français (Canada)',
+    'fr-ma': 'Français (Maroc)',
+    'fr-sn': 'Français (Sénégal)',
+    'fr-tn': 'Français (Tunisie)',
+    'de': 'Deutsch',
+    'en-ca': 'English (Canada)',
+    'en-ie': 'English (Ireland)',
+    'en-sg': 'English (Singapore)',
+    'es-es': 'Español (Espagne)',
+    'es': 'Español',
+    'nl': 'Nederlands',
+    'it': 'Italiano',
+    'pl': 'Polski',
+    'pt': 'Português',
+    'en-in': 'English (India)',
+    'en-vn': 'English (Vietnam)',
+    'en-id': 'English (Indonésie)',
+    'en-my': 'English (Malaisie)',
+    'en-pk': 'English (Pakistan)',
+    'en-th': 'English (Thaïlande)',
+    'en-hk': 'English (Hong Kong)',
+    'en-ph': 'English (Philippines)',
+    'en-jp': 'English (Japon)',
+    'en-bd': 'English (Bangladesh)',
+    'en-tw': 'English (Taïwan)',
+    'en-lk': 'English (Sri Lanka)',
+    'en-kh': 'English (Cambodge)',
+    'en-bn': 'English (Brunei)',
+    'en-fj': 'English (Fidji)',
+    'en-kr': 'English (Corée du Sud)',
+    'en-la': 'English (Laos)',
+    'en-mo': 'English (Macau)',
+    'en-np': 'English (Népal)',
+    'en-ws': 'English (Samoa)',
+    'en-tl': 'English (Timor-Leste)',
+    'en-au': 'English (Australie)',
+    'en-nz': 'English (Nouvelle-Zélande)'
+}
 
-# Créer des colonnes pour la langue et le pays
-col1, col2 = st.columns(2)
+# Interface Streamlit
+st.title('Outil de Similarité SERP')
 
-with col1:
-    langue1 = st.selectbox("Langue du mot-clé 1", ['Français', 'Anglais', 'Espagnol', 'Allemand'])
-    pays1 = st.selectbox("Pays du mot-clé 1", ['France', 'États-Unis', 'Espagne', 'Allemagne'])
+# Choix de la langue et du pays
+selected_language_country = st.selectbox('Choisissez une langue et un pays:', list(languages_countries.items()))
 
-with col2:
-    langue2 = st.selectbox("Langue du mot-clé 2", ['Français', 'Anglais', 'Espagnol', 'Allemand'])
-    pays2 = st.selectbox("Pays du mot-clé 2", ['France', 'États-Unis', 'Espagne', 'Allemagne'])
+# Récupération de la langue et du pays choisis
+selected_code, selected_label = selected_language_country
 
-# Bouton d'analyse
-if st.button("Analyser"):
-    # Placeholder pour les résultats
-    with st.spinner("Analyse en cours..."):
-        # Simulation des résultats pour les SERP (remplacer cette partie par le scraping réel)
-        # Ici nous utilisons les mots-clés pour simuler les résultats
-        urls1 = [f"https://example.com/{keyword1.replace(' ', '-')}-result-1", 
-                  f"https://example.com/{keyword1.replace(' ', '-')}-result-2"]
-        urls2 = [f"https://example.com/{keyword2.replace(' ', '-')}-result-1", 
-                  f"https://example.com/{keyword2.replace(' ', '-')}-result-2"]
+# Affichage du choix
+st.write(f'Vous avez choisi: **{selected_label}** (code: {selected_code})')
 
-        # Calcul des résultats
-        similar_urls = set(urls1) & set(urls2)
-        similarity_rate = (len(similar_urls) / max(len(urls1), len(urls2))) * 100 if urls1 and urls2 else 0
+# Saisie des mots-clés
+keyword1 = st.text_input('Saisissez le premier mot-clé:')
+keyword2 = st.text_input('Saisissez le second mot-clé:')
 
-        # Affichage des résultats
-        st.write(f"Taux de similarité : {similarity_rate:.2f}%")
-        st.write(f"URLs communes : {len(similar_urls)}")
+# Lancer la recherche SERP avec le code sélectionné
+if st.button('Lancer l\'analyse SERP'):
+    if keyword1 and keyword2:
+        result = run_serp_analysis(keyword1, keyword2, selected_code)
+        
+        # Afficher les résultats
+        st.subheader('Résultats de l\'analyse SERP')
+        st.write(f"**Mot-clé 1 :** {result['keyword1']}")
+        st.write(f"**Mot-clé 2 :** {result['keyword2']}")
+        st.write(f"**Langue/Pays :** {result['lang_country_code']}")
+        
+        # Afficher les SERPs
+        st.write("### SERP pour le Mot-clé 1")
+        for link in result['serp1']:
+            st.write(link)
 
-        # Création des colonnes pour les résultats
-        col3, col4 = st.columns(2)
+        st.write("### SERP pour le Mot-clé 2")
+        for link in result['serp2']:
+            st.write(link)
 
-        with col3:
-            st.subheader(f"Résultats pour le mot-clé 1 : {keyword1}")
-            for url in urls1:
-                st.write(f"[{url}]({url})")
+        # Ajouter une logique pour comparer les SERPs ici
+        # ...
+    else:
+        st.error("Veuillez entrer les deux mots-clés.")
 
-        with col4:
-            st.subheader(f"Résultats pour le mot-clé 2 : {keyword2}")
-            for url in urls2:
-                st.write(f"[{url}]({url})")
-
-        # Visualisation des évolutions (simulation)
-        st.subheader("Évolution des URLs")
-        for url in similar_urls:
-            st.write(f"🔗 {url} - Stable")
-
-        # Si aucune URL commune
-        if not similar_urls:
-            st.write("Aucune URL commune entre les deux mots-clés.")
+# Style optionnel
+st.markdown("""
+<style>
+    .streamlit-expanderHeader {
+        font-size: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
