@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import langcodes
 import pycountry
 
@@ -65,16 +65,94 @@ if st.button("Analyser"):
 
     st.write(f"URLs communes : {len(common_urls)}")
     st.write(f"Taux de similarité : {similarity_rate:.2f}%")
-    
-    # Graphique des évolutions entre les SERPs
-    if len(results1) > 0 and len(results2) > 0:
-        fig, ax = plt.subplots()
-        ax.barh(range(len(results1)), [1]*len(results1), color='blue', label=keyword1)
-        ax.barh(range(len(results2)), [1]*len(results2), color='orange', label=keyword2)
-        ax.set_yticks(range(max(len(results1), len(results2))))
-        ax.set_yticklabels(results1 + results2)
-        ax.legend()
-        plt.title("Graphique des SERPs")
-        st.pyplot(fig)
-    else:
-        st.write("Pas de résultats à afficher.")
+
+    # Affichage des résultats des SERPs
+    st.subheader("Top 10 Résultats pour le Mot-clé 1")
+    for i, url in enumerate(results1[:10]):
+        st.markdown(f"{i + 1}. [Lien]({url})")
+
+    st.subheader("Top 10 Résultats pour le Mot-clé 2")
+    for i, url in enumerate(results2[:10]):
+        st.markdown(f"{i + 1}. [Lien]({url})")
+
+    # Préparation des données pour le graphique
+    top_results1 = results1[:10]
+    top_results2 = results2[:10]
+    url_mappings = {url: i + 1 for i, url in enumerate(top_results1)}
+    url_mappings.update({url: -(i + 1) for i, url in enumerate(top_results2)})
+
+    fig = go.Figure()
+
+    for url, position in url_mappings.items():
+        if position > 0:  # URL dans le top 10 du mot-clé 1
+            fig.add_trace(go.Scatter(
+                x=[1], 
+                y=[position], 
+                mode='markers+text', 
+                text=[url],
+                textposition='top center',
+                marker=dict(size=10, color='blue'),
+                name=keyword1
+            ))
+        else:  # URL dans le top 10 du mot-clé 2
+            fig.add_trace(go.Scatter(
+                x=[2], 
+                y=[-position], 
+                mode='markers+text', 
+                text=[url],
+                textposition='top center',
+                marker=dict(size=10, color='orange'),
+                name=keyword2
+            ))
+
+    # Flèches pour indiquer les changements de position
+    for url in common_urls:
+        pos1 = url_mappings.get(url)
+        if pos1 > 0:  # Position dans le mot-clé 1
+            pos2 = url_mappings.get(url)
+            fig.add_annotation(
+                x=1.5,
+                y=pos1,
+                ax=1,
+                ay=pos1,
+                xref='x',
+                yref='y',
+                axref='x',
+                ayref='y',
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowcolor='gray'
+            )
+        elif pos1 < 0:  # Position dans le mot-clé 2
+            pos2 = url_mappings.get(url)
+            fig.add_annotation(
+                x=1.5,
+                y=-pos2,
+                ax=2,
+                ay=-pos2,
+                xref='x',
+                yref='y',
+                axref='x',
+                ayref='y',
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowcolor='gray'
+            )
+
+    fig.update_layout(
+        title="Comparaison des SERPs",
+        xaxis=dict(
+            tickvals=[1, 2],
+            ticktext=[keyword1, keyword2]
+        ),
+        yaxis=dict(
+            title="Position",
+            tickvals=list(range(-10, 1)),
+            ticktext=[str(-i) for i in range(10, 0, -1)] + [str(i) for i in range(1, 11)]
+        ),
+        showlegend=False
+    )
+
+    st.plotly_chart(fig)
