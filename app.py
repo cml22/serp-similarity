@@ -3,23 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# Configuration de la page doit être la première commande
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
-
-# Purpose of the tool
-st.markdown("""
-## Objectif de l'outil
-Cet outil permet d'analyser la similarité des SERPs entre deux mots-clés afin d'optimiser le contenu de votre site web pour le référencement. En entrant deux mots-clés, vous pourrez visualiser les résultats de recherche, comparer leur similarité et recevoir des recommandations sur l'optimisation de vos titres pour améliorer votre classement dans les moteurs de recherche.
-
-### Fonctionnement
-1. **Entrée des Mots-Clés** : Vous entrez deux mots-clés, choisissez la langue et le pays pour chacun.
-2. **Scraping des SERPs** : L'outil récupère les résultats de recherche pour les deux mots-clés spécifiés.
-3. **Analyse des Résultats** : Il compare les résultats et calcule le taux de similarité entre les SERPs des deux mots-clés.
-4. **Recommandations** : Des suggestions sont fournies sur l'inclusion des mots-clés dans vos titres.
-
----  
-""")
-
 def scrape_serp(keyword, language, country):
     query = urllib.parse.quote(keyword)
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
@@ -79,6 +62,7 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
+st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
 st.title("Analyse de Similarité SERP")
 st.markdown("---")  # Ligne de séparation
 
@@ -114,51 +98,10 @@ if st.button("Analyser"):
         
         # Résumé sur l'utilisation des mots-clés
         if counts['common_both'] > 0:
-            st.success("Les deux mots-clés dans le titre semblent contribuer à être une URL commune.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"Il serait préférable d'inclure le mot-clé **\"{keyword1}\"** dans votre title pour optimiser votre classement.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"Il serait préférable d'inclure le mot-clé **\"{keyword2}\"** dans votre title pour optimiser votre classement.")
+            st.success("Les deux mots-clés sont présents dans les titres de plusieurs résultats.")
         else:
-            st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
-
-        st.markdown("---")  # Ligne de séparation
-        st.subheader("Résultats des SERP")
-        
-        # Affichage des liens de recherche avec encodage
-        encoded_keyword1 = urllib.parse.quote(keyword1)
-        encoded_keyword2 = urllib.parse.quote(keyword2)
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
-
-        # Affichage des résultats de SERP
-        with st.expander(f"Détails SERP pour le mot-clé : {keyword1}"):
-            st.write(f"**SERP pour le mot-clé : {keyword1}**")
-            for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")  # Lien cliquable
-
-        with st.expander(f"Détails SERP pour le mot-clé : {keyword2}"):
-            st.write(f"**SERP pour le mot-clé : {keyword2}**")
-            for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")  # Lien cliquable
-
-        st.markdown("---")  # Ligne de séparation
-        st.subheader("URLs communes")
-        for url in common_urls:
-            st.write(url)
-
-        # Affichage des URLs uniquement présentes pour le Mot-clé 1
-        with st.expander(f"URLs uniquement pour le mot-clé : {keyword1}"):
-            for url in non_common_urls1:
-                st.write(url)
-
-        # Affichage des URLs uniquement présentes pour le Mot-clé 2
-        with st.expander(f"URLs uniquement pour le mot-clé : {keyword2}"):
-            for url in non_common_urls2:
-                st.write(url)
-
-    else:
-        st.error("Veuillez entrer les deux mots-clés.")
+            st.warning("Les deux mots-clés ne sont pas présents dans les titres de résultats communs.")
 
 # Backlink en bas de la page
 st.markdown("---")  # Ligne de séparation
+st.markdown("[Développé par Charles Migaud](https://charles-migaud.fr)")
