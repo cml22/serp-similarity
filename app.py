@@ -5,87 +5,97 @@ import pandas as pd
 import pycountry
 import langcodes
 
-# Fonction pour scraper les SERP en fonction de la langue et la localisation
-def scrape_serp(query, lang="en", country="us"):
+# Fonction pour scraper les SERPs
+def scrape_serp(query, lang="fr", region="FR"):
+    url = f"https://www.google.{region}/search?q={query}&hl={lang}"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-        "Accept-Language": f"{lang}",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"
     }
     
-    url = f"https://www.google.com/search?q={query}&hl={lang}&gl={country}&num=100"
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        results = []
-        for g in soup.find_all('div', class_='g'):
-            link = g.find('a')['href']
-            results.append(link)
-        
-        return results
+    results = []
     
-    except requests.RequestException as e:
-        st.error(f"Erreur lors du scraping pour '{query}': {e}")
-        return []
+    for g in soup.find_all('div', class_='g'):
+        title = g.find('h3')
+        link = g.find('a')
+        if title and link:
+            results.append({
+                'title': title.text,
+                'url': link['href']
+            })
+    
+    return results
 
-# Récupérer toutes les langues et tous les pays
+# Fonction pour analyser les SERPs
+def analyze_serps(results1, results2):
+    urls1 = {result['url'] for result in results1}
+    urls2 = {result['url'] for result in results2}
+    
+    common_urls = urls1.intersection(urls2)
+    common_domains = {url.split('/')[2] for url in common_urls}
+    
+    similarity_rate = (len(common_urls) / min(len(urls1), len(urls2))) * 100 if min(len(urls1), len(urls2)) > 0 else 0
+    
+    metrics = {
+        'new': len(urls2 - urls1),
+        'improved': len(common_urls - urls1),
+        'declined': len(urls1 - urls2),
+        'lost': len(urls1 - common_urls)
+    }
+    
+    return {
+        'common_urls': common_urls,
+        'common_domains': common_domains,
+        'similarity_rate': similarity_rate,
+        'metrics': metrics
+    }
+
+# Obtenir toutes les langues et pays disponibles
 lang_options = {langcodes.get(i).language_name(): i for i in langcodes.LANGUAGES.keys()}
 country_options = {country.name: country.alpha_2 for country in pycountry.countries}
 
-# Interface utilisateur en deux colonnes
-st.title("SERP Similarity Analysis")
+# Pré-sélectionner "fr" pour le pays du premier mot-clé
+default_country = "FR"
 
+# Interface utilisateur
+st.title("Outil d'analyse de SERP")
 col1, col2 = st.columns(2)
 
-# Colonne de gauche pour le mot-clé 1
 with col1:
     st.header("Mot-clé 1")
-    keyword1 = st.text_input("Mot-clé 1", key="keyword1")
-    lang1 = st.selectbox("Langue pour le premier mot-clé", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"), key="lang1")
-    
-    # Préselectionner "France" dans les pays
-    country1 = st.selectbox("Pays pour le premier mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country1")
+    keyword1 = st.text_input("Entrez le mot-clé 1")
+    lang1 = st.selectbox("Langue", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"))
+    country1 = st.selectbox("Pays", options=list(country_options.keys()), index=list(country_options.values()).index(default_country))
 
-# Colonne de droite pour le mot-clé 2
 with col2:
     st.header("Mot-clé 2")
-    keyword2 = st.text_input("Mot-clé 2", key="keyword2")
-    lang2 = st.selectbox("Langue pour le deuxième mot-clé", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"), key="lang2")
-    
-    # Préselectionner "France" dans les pays
-    country2 = st.selectbox("Pays pour le deuxième mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country2")
+    keyword2 = st.text_input("Entrez le mot-clé 2")
+    lang2 = st.selectbox("Langue", options=list(lang_options.keys()))
+    country2 = st.selectbox("Pays", options=list(country_options.keys()))
 
-# Bouton pour lancer l'analyse
 if st.button("Analyser"):
     if keyword1 and keyword2:
-        results1 = scrape_serp(keyword1, lang=lang_options[lang1], country=country_options[country1])
-        results2 = scrape_serp(keyword2, lang=lang_options[lang2], country=country_options[country2])
+        results1 = scrape_serp(keyword1, lang=lang_options[lang1], region=country_options[country1])
+        results2 = scrape_serp(keyword2, lang=lang_options[lang2], region=country_options[country2])
         
-        # Calcul des métriques
-        common_urls = set(results1) & set(results2)
-        similarity_rate = (len(common_urls) / min(len(results1), len(results2))) * 100 if min(len(results1), len(results2)) > 0 else 0
-        num_declined = len(set(results1) - common_urls)
-        num_new = len(set(results2) - common_urls)
-        
-        # Afficher les résultats
-        st.subheader("Résultats")
-        st.write(f"Nombre d'URLs communes: {len(common_urls)}")
-        st.write(f"Taux de similarité: {similarity_rate:.2f}%")
-        st.write(f"Nouvelles URLs: {num_new}")
-        st.write(f"URLs déclinées: {num_declined}")
+        if results1 and results2:
+            analysis = analyze_serps(results1, results2)
+            
+            st.subheader("Résultats de l'analyse")
+            st.write(f"Taux de similarité : {analysis['similarity_rate']:.2f}%")
+            st.write(f"URLs communes : {len(analysis['common_urls'])}")
+            st.write(f"Domaines communs : {len(analysis['common_domains'])}")
+            st.write(f"Nouvelles URLs : {analysis['metrics']['new']}")
+            st.write(f"URLs améliorées : {analysis['metrics']['improved']}")
+            st.write(f"URLs déclinées : {analysis['metrics']['declined']}")
+            st.write(f"URLs perdues : {analysis['metrics']['lost']}")
+            
+            # Graphique de la comparaison des SERPs (à implémenter)
+            st.write("Graphique des évolutions entre les SERPs (à venir)...")
+        else:
+            st.error("Aucun résultat trouvé pour l'un des mots-clés.")
+    else:
+        st.warning("Veuillez entrer les deux mots-clés.")
 
-        # Créer un DataFrame pour les résultats
-        df_results = pd.DataFrame({
-            "URL": list(common_urls),
-            "Mot-clé 1 Rank": [results1.index(url) + 1 if url in results1 else None for url in common_urls],
-            "Mot-clé 2 Rank": [results2.index(url) + 1 if url in results2 else None for url in common_urls],
-        })
-
-        # Afficher les résultats dans un tableau
-        st.dataframe(df_results)
-
-# Ajouter une section d'explications ou d'aide si nécessaire
-st.sidebar.info("Entrez deux mots-clés, sélectionnez les langues et pays, puis cliquez sur 'Analyser' pour obtenir les résultats.")
