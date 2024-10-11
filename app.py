@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+import pandas as pd
 
 # Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
@@ -166,14 +167,21 @@ if st.button("Analyze"):
         # Display the table
         st.table(common_urls_data)
 
+        # Create a DataFrame for exporting to CSV
+        df = pd.DataFrame(common_urls_data)
+
+        # Button to download the data as CSV
+        st.download_button(
+            label="Download CSV",
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name='serp_similarity_data.csv',
+            mime='text/csv'
+        )
+
         # Display URLs unique to Keyword 1
         with st.expander(f"URLs unique to Keyword: {keyword1}"):
             unique_urls1 = set(urls1.keys()) - common_urls
             for url in unique_urls1:
                 st.write(url)
 
-        # Display URLs unique to Keyword 2
-        with st.expander(f"URLs unique to Keyword: {keyword2}"):
-            unique_urls2 = set(urls2.keys()) - common_urls
-            for url in unique_urls2:
-                st.write(url)
+        # Display URLs unique to Keyword
