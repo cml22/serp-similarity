@@ -62,20 +62,24 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
+st.set_page_config(page_title="Analyse de Similarité SERP", layout="wide")
 st.title("Analyse de Similarité SERP")
+st.markdown("---")  # Ligne de séparation
 
 # Entrée des mots-clés
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Entrer le Mot-clé 1 :")
+    keyword1 = st.text_input("Entrer le Mot-clé 1 :", placeholder="Ex: marketing digital")
     language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt"])
     country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
-    keyword2 = st.text_input("Entrer le Mot-clé 2 :")
+    keyword2 = st.text_input("Entrer le Mot-clé 2 :", placeholder="Ex: SEO")
     language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt"])
     country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+
+st.markdown("---")  # Ligne de séparation
 
 if st.button("Analyser"):
     if keyword1 and keyword2:
@@ -102,19 +106,22 @@ if st.button("Analyser"):
         else:
             st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
 
+        st.markdown("---")  # Ligne de séparation
+        st.subheader("Résultats des SERP")
+        
         # Affichage des résultats de SERP
         with st.expander(f"Afficher SERP pour le mot-clé : {keyword1}"):
             st.write(f"**SERP pour le mot-clé : {keyword1}**")
             for url, title in results_keyword1:
-                st.write(f"{url} - {title}")
+                st.markdown(f"- [{title}]({url})")  # Lien cliquable
 
         with st.expander(f"Afficher SERP pour le mot-clé : {keyword2}"):
             st.write(f"**SERP pour le mot-clé : {keyword2}**")
             for url, title in results_keyword2:
-                st.write(f"{url} - {title}")
+                st.markdown(f"- [{title}]({url})")  # Lien cliquable
 
-        # Affichage des URLs communes
-        st.write("**URLs communes**")
+        st.markdown("---")  # Ligne de séparation
+        st.subheader("URLs communes")
         for url in common_urls:
             st.write(url)
 
