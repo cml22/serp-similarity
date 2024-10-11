@@ -1,75 +1,69 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 
-# Fonction pour scraper les résultats de recherche Google
-def scrape_serp(query, lang="fr", region="FR"):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    url = f"https://www.google.com/search?q={query}&hl={lang}&gl={region}"
+def scrape_serp(keyword, lang, country):
+    # Fonction de scraping pour récupérer les URLs du SERP
+    url = f"https://www.google.com/search?q={keyword}&hl={lang}&gl={country}"
+    headers = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
-
-    results = []
-    for item in soup.find_all('h3'):
-        parent = item.find_parent('a')
-        if parent:
-            results.append((item.get_text(), parent['href']))
     
-    return results[:10]  # Limiter aux 10 premiers résultats
+    results = []
+    for g in soup.find_all('div', class_='g'):
+        link = g.find('a')['href']
+        results.append(link)
+    return results[:10]
 
-# Titre de l'application
-st.title("Outil d'analyse de SERP")
+st.title("Analyse de Similarité SERP")
 
-# Colonne pour le mot-clé 1
-col1, col2 = st.columns(2)
+# Entrée des mots-clés
+keyword1 = st.text_input("Entrez le mot-clé 1")
+keyword2 = st.text_input("Entrez le mot-clé 2")
+lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
+lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
 
-with col1:
-    st.subheader("Mot-clé 1")
-    keyword1 = st.text_input("Entrez le mot-clé 1", value="exemple mot-clé 1")  # Valeur par défaut pour test
-    lang1 = st.selectbox("Langue (Mot-clé 1)", options=["fr", "en", "es", "de", "it"], index=0)
-    country1 = st.selectbox("Pays (Mot-clé 1)", options=["FR", "US", "GB", "DE", "IT"], index=0)
-
-# Colonne pour le mot-clé 2
-with col2:
-    st.subheader("Mot-clé 2")
-    keyword2 = st.text_input("Entrez le mot-clé 2", value="exemple mot-clé 2")  # Valeur par défaut pour test
-    lang2 = st.selectbox("Langue (Mot-clé 2)", options=["fr", "en", "es", "de", "it"], index=0)
-    country2 = st.selectbox("Pays (Mot-clé 2)", options=["FR", "US", "GB", "DE", "IT"], index=0)
-
-# Bouton pour lancer l'analyse
 if st.button("Analyser"):
-    if keyword1 and keyword2:
-        # Scraper les résultats pour les deux mots-clés
-        results1 = scrape_serp(keyword1, lang1, country1)
-        results2 = scrape_serp(keyword2, lang2, country2)
+    # Scraping des SERPs
+    urls1 = scrape_serp(keyword1, lang1, "FR")
+    urls2 = scrape_serp(keyword2, lang2, "FR")
 
-        # Extraire les URLs
-        urls1 = [result[1] for result in results1]
-        urls2 = [result[1] for result in results2]
+    # Calcul du taux de similarité
+    common_urls = list(set(urls1) & set(urls2))
+    similarity_rate = len(common_urls) / 10 * 100  # Sur 10 URLs
 
-        # Calculer le taux de similarité
-        common_urls = set(urls1) & set(urls2)
-        total_urls = len(set(urls1) | set(urls2))
-        similarity_rate = len(common_urls) / total_urls * 100 if total_urls > 0 else 0
+    # Affichage des résultats
+    st.subheader("Résultats de l'analyse")
+    st.write(f"Taux de similarité : {similarity_rate:.2f}%")
+    st.write(f"URLs communes : {len(common_urls)}")
 
-        # Afficher les résultats
-        st.subheader("Résultats de l'analyse")
-        st.write(f"Taux de similarité : {similarity_rate:.2f}%")
-        st.write(f"URLs communes : {len(common_urls)}")
-        
-        # Afficher les URLs des résultats
-        st.subheader("Top 10 Mot-clé 1")
-        for title, url in results1:
-            st.write(f"[{title}]({url})")
+    # Affichage des URLs
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader(f"URLs pour le mot-clé 1 : {keyword1}")
+        for url in urls1:
+            st.write(url)
+    
+    with col2:
+        st.subheader(f"URLs pour le mot-clé 2 : {keyword2}")
+        for url in urls2:
+            st.write(url)
+    
+    # Affichage des URLs communes
+    st.subheader("URLs communes")
+    for url in common_urls:
+        st.write(url)
 
-        st.subheader("Top 10 Mot-clé 2")
-        for title, url in results2:
-            st.write(f"[{title}]({url})")
+    # Comparaison visuelle
+    st.subheader("Comparaison des SERPs")
+    for url in urls1:
+        if url in urls2:
+            st.write(f"🔄 {url} (Commun)")
+        else:
+            st.write(f"⬇️ {url} (Non trouvé dans {keyword2})")
 
-        st.subheader("URLs communes")
-        for url in common_urls:
-            st.write(f"[{url}]({url})")
-    else:
-        st.warning("Veuillez entrer les deux mots-clés.")
+    for url in urls2:
+        if url not in urls1:
+            st.write(f"⬆️ {url} (Non trouvé dans {keyword1})")
