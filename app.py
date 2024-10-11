@@ -3,6 +3,23 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# But de l'outil
+st.markdown("# Analyse de Similarité SERP")
+st.markdown("""
+Cet outil permet d'analyser la similarité entre deux mots-clés sur les résultats de recherche Google. 
+Il scrute les SERPs pour déterminer le taux de similarité des URLs et fournit des recommandations 
+sur l'optimisation des titres de pages pour améliorer le classement.
+
+## Fonctionnement
+1. **Entrée des mots-clés** : Vous entrez deux mots-clés, leur langue et le pays pour la recherche.
+2. **Scraping des résultats** : L'outil récupère les résultats de recherche Google pour chaque mot-clé.
+3. **Analyse des titres** : Il vérifie la présence des mots-clés dans les titres des résultats.
+4. **Calcul de la similarité** : Il détermine le taux de similarité basé sur les URLs communes.
+5. **Affichage des résultats** : Les résultats sont affichés avec des recommandations d'optimisation.
+
+Pour toute question, n'hésitez pas à consulter [charles-migaud.fr](https://www.charles-migaud.fr).
+""")
+
 def scrape_serp(keyword, language, country):
     query = urllib.parse.quote(keyword)
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
@@ -62,8 +79,6 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
-st.title("Analyse de Similarité SERP")
 st.markdown("---")  # Ligne de séparation
 
 # Entrée des mots-clés
