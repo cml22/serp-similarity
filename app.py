@@ -2,6 +2,12 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+from collections import Counter
+import nltk
+from nltk.util import ngrams
+
+# Download NLTK data files (only needed once)
+nltk.download('punkt')
 
 # Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
@@ -16,9 +22,14 @@ st.info("**Disclaimer:** Optimizing titles alone is not enough for SEO. Ensure y
 # Backlink to Charles Migaud's site
 st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr)')
 
-def scrape_serp(keyword, language, country, num_results):
+def scrape_serp(keyword, language, country, num_urls):
     query = urllib.parse.quote(keyword)
-    url = f"https://www.google.com/search?q={query}&hl={language}&gl={country}"
+    
+    # Update the country code for the UK
+    if country == "gb":
+        country = "co.uk"
+        
+    url = f"https://www.google.{country}/search?q={query}&hl={language}&gl={country}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
@@ -33,13 +44,13 @@ def scrape_serp(keyword, language, country, num_results):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     results = []
-    for g in soup.find_all('div', class_='g')[:num_results]:  # Limit the number of results
+    for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
         if link:
             title = g.find('h3').get_text() if g.find('h3') else "Title not found"
             results.append((link['href'], title))
 
-    return results
+    return results[:num_urls]
 
 def extract_domain(url):
     """Extract domain name from URL."""
@@ -76,8 +87,62 @@ def calculate_similarity(results1, results2):
     total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
+
+    # Calculate similarity for domains
+    domains1 = {extract_domain(url) for url in urls1.keys()}
+    domains2 = {extract_domain(url) for url in urls2.keys()}
     
-    return common_urls, urls1, urls2, similarity_rate_url
+    common_domains = domains1.intersection(domains2)
+    total_domains = domains1.union(domains2)
+    
+    similarity_rate_domain = (len(common_domains) / len(total_domains)) * 100 if total_domains else 0
+    
+    return common_urls, urls1, urls2, similarity_rate_url, similarity_rate_domain
+
+def extract_content(url):
+    """Scrape content from a URL."""
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extract title and headings
+        title = soup.title.string if soup.title else "No Title"
+        headings = [h.get_text() for h in soup.find_all(['h1', 'h2', 'h3'])]
+        
+        # Extract main content
+        content = ' '.join(p.get_text() for p in soup.find_all('p'))
+        
+        return title, headings, content
+    except Exception as e:
+        st.warning(f"Could not fetch content from {url}: {e}")
+        return None, None, None
+
+def generate_ngrams(text, n):
+    """Generate n-grams from text."""
+    tokens = nltk.word_tokenize(text)
+    return list(ngrams(tokens, n))
+
+def analyze_ngrams(common_urls, keyword1, keyword2, n):
+    """Analyze n-grams from titles, headings, and content of common URLs."""
+    all_ngrams = []
+    
+    for url in common_urls:
+        title, headings, content = extract_content(url)
+        all_ngrams.extend(generate_ngrams(title, n))
+        for heading in headings:
+            all_ngrams.extend(generate_ngrams(heading, n))
+        all_ngrams.extend(generate_ngrams(content, n))
+    
+    ngram_counts = Counter(all_ngrams)
+    most_common_ngram, freq = ngram_counts.most_common(1)[0] if ngram_counts else (None, 0)
+    
+    keyword1_ngram = tuple(keyword1.lower().split())
+    keyword2_ngram = tuple(keyword2.lower().split())
+
+    is_keyword1 = most_common_ngram == keyword1_ngram
+    is_keyword2 = most_common_ngram == keyword2_ngram
+    
+    return most_common_ngram, freq, is_keyword1, is_keyword2
 
 # User Interface with Streamlit
 st.title("SERP Similarity Analysis")
@@ -89,15 +154,15 @@ col1, col2 = st.columns(2)
 with col1:
     keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
     language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country1 = st.selectbox("Country (Keyword 1):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
+    country1 = st.selectbox("Country (Keyword 1):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
     keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
     language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Country (Keyword 2):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
+    country2 = st.selectbox("Country (Keyword 2):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
-# Slider to choose the number of URLs to scrape
-num_urls = st.slider("Select the number of URLs to scrape (between 10 and 100):", min_value=10, max_value=100, value=10, step=10)
+# Slider for the number of URLs to scrape
+num_urls = st.slider("Number of URLs to Scrape:", min_value=10, max_value=100, value=10, step=10)
 
 st.markdown("---")
 
@@ -108,63 +173,28 @@ if st.button("Analyze"):
         results_keyword2 = scrape_serp(keyword2, language2, country2, num_urls)
 
         # Calculate similarity
-        common_urls, urls1, urls2, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, urls1, urls2, similarity_rate_url, similarity_rate_domain = calculate_similarity(results_keyword1, results_keyword2)
 
         # Analyze titles
         counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
+        # Analyze n-grams
+        n = 2  # Change this to set n-gram size (e.g., 2 for bigrams)
+        most_common_ngram, freq, is_keyword1, is_keyword2 = analyze_ngrams(common_urls, keyword1, keyword2, n)
+
         # Display results
+        st.write(f"**Most Common N-gram:** {most_common_ngram} (Frequency: {freq})")
+        
+        if is_keyword1:
+            st.success(f"The most representative n-gram matches **Keyword 1: {keyword1}**.")
+        elif is_keyword2:
+            st.success(f"The most representative n-gram matches **Keyword 2: {keyword2}**.")
+        else:
+            st.warning("The most representative n-gram does not match either keyword.")
+
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
+        st.write(f"**Similarity Rate Domain: {similarity_rate_domain:.2f}%**")
         
         # Summary on keyword usage
         if counts['common_both'] > 0:
-            st.success("Both keywords seem to contribute to being a common URL in the title.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"It would be better to include **{keyword1}** in your title to optimize your ranking.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"It would be better to include **{keyword2}** in your title to optimize your ranking.")
-        else:
-            st.info("Neither keyword seems effective alone. Consider other optimizations.")
-
-        st.markdown("---")
-        st.subheader("SERP Results")
-        
-        # Display search links with encoded keywords and the correct language/country
-        encoded_keyword1 = urllib.parse.quote(keyword1)
-        encoded_keyword2 = urllib.parse.quote(keyword2)
-
-        # Generate SERP links with language and country parameters
-        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}"
-        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}"
-
-        # Display the clickable links for the SERPs
-        st.markdown(f"[View SERP for Keyword: {keyword1}]({serp_url1})")
-        st.markdown(f"[View SERP for Keyword: {keyword2}]({serp_url2})")
-
-        # Display SERP results
-        with st.expander(f"Details for Keyword: {keyword1}"):
-            st.write(f"**SERP for Keyword: {keyword1}**")
-            for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")
-
-        with st.expander(f"Details for Keyword: {keyword2}"):
-            st.write(f"**SERP for Keyword: {keyword2}**")
-            for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")
-
-        st.markdown("---")
-        st.subheader("Common URLs")
-        for url in common_urls:
-            st.write(url)
-
-        # Display URLs unique to Keyword 1
-        with st.expander(f"URLs unique to Keyword: {keyword1}"):
-            unique_urls1 = set(urls1.keys()) - common_urls
-            for url in unique_urls1:
-                st.write(url)
-
-        # Display URLs unique to Keyword 2
-        with st.expander(f"URLs unique to Keyword: {keyword2}"):
-            unique_urls2 = set(urls2.keys()) - common_urls
-            for url in unique_urls2:
-                st.write(url)
+            st
