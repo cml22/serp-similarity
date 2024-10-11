@@ -19,8 +19,8 @@ def scrape_serp(keyword, lang, country):
 st.title("Analyse de Similarité SERP")
 
 # Entrée des mots-clés sans pré-remplissage
-keyword1 = st.text_input("Entrez le mot-clé 1", "")  # Champ vide par défaut
-keyword2 = st.text_input("Entrez le mot-clé 2", "")  # Champ vide par défaut
+keyword1 = st.text_input("Entrez le mot-clé 1")  # Champ vide par défaut
+keyword2 = st.text_input("Entrez le mot-clé 2")  # Champ vide par défaut
 lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
 lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
 
@@ -59,9 +59,9 @@ if st.button("Analyser"):
     # Comparaison visuelle
     st.subheader("Comparaison des SERPs")
     comparison_df = pd.DataFrame({
-        'URL': urls1 + urls2,
-        'Position Mot-clé 1': [1 + urls1.index(url) if url in urls1 else None for url in urls1 + urls2],
-        'Position Mot-clé 2': [1 + urls2.index(url) if url in urls2 else None for url in urls1 + urls2]
+        'URL': list(set(urls1 + urls2)),
+        'Position Mot-clé 1': [urls1.index(url) + 1 if url in urls1 else None for url in set(urls1 + urls2)],
+        'Position Mot-clé 2': [urls2.index(url) + 1 if url in urls2 else None for url in set(urls1 + urls2)]
     }).dropna()
 
     for index, row in comparison_df.iterrows():
