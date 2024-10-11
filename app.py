@@ -1,10 +1,9 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
 
 # Fonction pour scraper les résultats de recherche Google
-def scrape_serp(query, lang="en", region="us"):
+def scrape_serp(query, lang="fr", region="FR"):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
@@ -46,7 +45,7 @@ if st.button("Analyser"):
         results1 = scrape_serp(keyword1, lang1, country1)
         results2 = scrape_serp(keyword2, lang2, country2)
 
-        # Extraire les URLs et les titres
+        # Extraire les URLs
         urls1 = [result[1] for result in results1]
         urls2 = [result[1] for result in results2]
 
@@ -59,12 +58,7 @@ if st.button("Analyser"):
         st.subheader("Résultats de l'analyse")
         st.write(f"Taux de similarité : {similarity_rate:.2f}%")
         st.write(f"URLs communes : {len(common_urls)}")
-        st.write(f"Domaines communs : {len(set(result.split('/')[2] for result in common_urls))}")
-        st.write(f"Nouvelles URLs : {len(set(urls2) - set(urls1))}")
-        st.write(f"URLs améliorées : {len(set(urls1) - set(urls2))}")
-        st.write(f"URLs déclinées : {len(set(urls1) - common_urls)}")
-        st.write(f"URLs perdues : {len(set(urls2) - common_urls)}")
-
+        
         # Afficher les URLs des résultats
         st.subheader("Top 10 Mot-clé 1")
         for title, url in results1:
@@ -79,4 +73,3 @@ if st.button("Analyser"):
             st.write(f"[{url}]({url})")
     else:
         st.warning("Veuillez entrer les deux mots-clés.")
-
