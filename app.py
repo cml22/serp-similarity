@@ -3,21 +3,18 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# But de l'outil
-st.markdown("# Analyse de Similarité SERP")
+# Purpose of the tool
 st.markdown("""
-Cet outil permet d'analyser la similarité entre deux mots-clés sur les résultats de recherche Google. 
-Il scrute les SERPs pour déterminer le taux de similarité des URLs et fournit des recommandations 
-sur l'optimisation des titres de pages pour améliorer le classement.
+## Objectif de l'outil
+Cet outil permet d'analyser la similarité des SERPs entre deux mots-clés afin d'optimiser le contenu de votre site web pour le référencement. En entrant deux mots-clés, vous pourrez visualiser les résultats de recherche, comparer leur similarité et recevoir des recommandations sur l'optimisation de vos titres pour améliorer votre classement dans les moteurs de recherche.
 
-## Fonctionnement
-1. **Entrée des mots-clés** : Vous entrez deux mots-clés, leur langue et le pays pour la recherche.
-2. **Scraping des résultats** : L'outil récupère les résultats de recherche Google pour chaque mot-clé.
-3. **Analyse des titres** : Il vérifie la présence des mots-clés dans les titres des résultats.
-4. **Calcul de la similarité** : Il détermine le taux de similarité basé sur les URLs communes.
-5. **Affichage des résultats** : Les résultats sont affichés avec des recommandations d'optimisation.
+### Fonctionnement
+1. **Entrée des Mots-Clés** : Vous entrez deux mots-clés, choisissez la langue et le pays pour chacun.
+2. **Scraping des SERPs** : L'outil récupère les résultats de recherche pour les deux mots-clés spécifiés.
+3. **Analyse des Résultats** : Il compare les résultats et calcule le taux de similarité entre les SERPs des deux mots-clés.
+4. **Recommandations** : Des suggestions sont fournies sur l'inclusion des mots-clés dans vos titres.
 
-Pour toute question, n'hésitez pas à consulter [charles-migaud.fr](https://www.charles-migaud.fr).
+---  
 """)
 
 def scrape_serp(keyword, language, country):
@@ -79,6 +76,8 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
+st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
+st.title("Analyse de Similarité SERP")
 st.markdown("---")  # Ligne de séparation
 
 # Entrée des mots-clés
@@ -115,9 +114,9 @@ if st.button("Analyser"):
         if counts['common_both'] > 0:
             st.success("Les deux mots-clés dans le titre semblent contribuer à être une URL commune.")
         elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"Il serait préférable d'inclure le **{keyword1}** dans votre title pour optimiser votre classement.")
+            st.warning(f"Il serait préférable d'inclure le mot-clé **\"{keyword1}\"** dans votre title pour optimiser votre classement.")
         elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"Il serait préférable d'inclure le **{keyword2}** dans votre title pour optimiser votre classement.")
+            st.warning(f"Il serait préférable d'inclure le mot-clé **\"{keyword2}\"** dans votre title pour optimiser votre classement.")
         else:
             st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
 
@@ -158,3 +157,7 @@ if st.button("Analyser"):
 
     else:
         st.error("Veuillez entrer les deux mots-clés.")
+
+# Backlink en bas de la page
+st.markdown("---")  # Ligne de séparation
+st.markdown("Développé par [Charles Migaud](https://charles-migaud.fr)")
