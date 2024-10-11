@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import pycountry
+import matplotlib.pyplot as plt
 
 # Fonction pour scraper les SERPs
 def scrape_serp(query, lang="fr", region="FR"):
@@ -48,7 +49,9 @@ def analyze_serps(results1, results2):
         'common_urls': common_urls,
         'common_domains': common_domains,
         'similarity_rate': similarity_rate,
-        'metrics': metrics
+        'metrics': metrics,
+        'urls1': urls1,
+        'urls2': urls2
     }
 
 # Obtenir toutes les langues et pays disponibles
@@ -114,11 +117,20 @@ if st.button("Analyser"):
             st.write(f"URLs améliorées : {analysis['metrics']['improved']}")
             st.write(f"URLs déclinées : {analysis['metrics']['declined']}")
             st.write(f"URLs perdues : {analysis['metrics']['lost']}")
+
+            # Création du graphique
+            labels = ['Mot-clé 1', 'Mot-clé 2']
+            values = [len(analysis['urls1']), len(analysis['urls2'])]
+
+            fig, ax = plt.subplots()
+            ax.bar(labels, values, color=['blue', 'orange'])
+            ax.set_ylabel('Nombre d\'URLs')
+            ax.set_title('Comparaison des URLs entre les SERPs')
+
+            # Afficher le graphique dans Streamlit
+            st.pyplot(fig)
             
-            # Graphique de la comparaison des SERPs (à implémenter)
-            st.write("Graphique des évolutions entre les SERPs (à venir)...")
         else:
             st.error("Aucun résultat trouvé pour l'un des mots-clés.")
     else:
         st.warning("Veuillez entrer les deux mots-clés.")
-
