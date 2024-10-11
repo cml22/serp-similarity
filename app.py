@@ -1,34 +1,78 @@
 import streamlit as st
 import requests
-from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+import urllib.parse
 
-# Configure the page
+# Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
 
-# Function to extract the domain from a URL
+# Purpose of the tool
+st.write("## Purpose")
+st.write("This tool compares the similarity of SERPs (Search Engine Results Pages) for two different keywords. It helps determine whether a new page should be created or if an existing page should be optimized based on the overlap of search results.")
+
+# Disclaimer
+st.info("**Disclaimer:** Optimizing titles alone is not enough for SEO. Ensure you're addressing other key factors like content quality, backlinks, and user experience.")
+
+# Backlink to Charles Migaud's site
+st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr)')
+
+def scrape_serp(keyword, language, country):
+    query = urllib.parse.quote(keyword)
+    
+    # Update the country code for the UK
+    if country == "gb":
+        country = "co.uk"
+        
+    url = f"https://www.google.{country}/search?q={query}&hl={language}"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        st.error("Error while fetching results.")
+        return []
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    results = []
+    for g in soup.find_all('div', class_='g'):
+        link = g.find('a', href=True)
+        if link:
+            title = g.find('h3').get_text() if g.find('h3') else "Title not found"
+            results.append((link['href'], title))
+
+    return results
+
 def extract_domain(url):
-    parsed_url = urlparse(url)
+    """Extract domain name from URL."""
+    parsed_url = urllib.parse.urlparse(url)
     return parsed_url.netloc
 
-# Function to scrape a SERP (dummy scraper here, but you can add actual scraping logic)
-def scrape_serp(keyword, language, country):
-    # Example fake results (replace with your actual scraping logic)
-    if keyword == "test":
-        return [
-            ("https://example.com/page1", "Example Title 1"),
-            ("https://example.com/page2", "Example Title 2"),
-            ("https://different.com/page3", "Different Title 1")
-        ]
-    else:
-        return [
-            ("https://example.com/page2", "Example Title 2"),
-            ("https://example.com/page4", "Example Title 3"),
-            ("https://another.com/page5", "Another Title 1")
-        ]
+def analyze_titles(results, keyword1, keyword2):
+    counts = {
+        "common_keyword1": 0,
+        "common_keyword2": 0,
+        "common_both": 0,
+    }
 
-# Function to calculate similarities
+    urls_common = {url: title for url, title in results[0]}  # SERP 1
+    urls_non_common = {url: title for url, title in results[1]}  # SERP 2
+
+    for url, title in urls_common.items():
+        if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
+            counts["common_both"] += 1
+        elif keyword1.lower() in title.lower():
+            counts["common_keyword1"] += 1
+        elif keyword2.lower() in title.lower():
+            counts["common_keyword2"] += 1
+
+    return counts
+
 def calculate_similarity(results1, results2):
-    # Extract URLs
+    # Extract full URLs
     urls1 = {result[0]: result[1] for result in results1}
     urls2 = {result[0]: result[1] for result in results2}
 
@@ -36,47 +80,107 @@ def calculate_similarity(results1, results2):
     domains1 = {extract_domain(url): title for url, title in results1}
     domains2 = {extract_domain(url): title for url, title in results2}
 
-    # Calculate URL similarity
+    # Calculate similarity for URLs
     common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
-    url_similarity_rate = len(common_urls) / len(set(urls1.keys()).union(set(urls2.keys()))) * 100 if urls1 or urls2 else 0
+    non_common_urls1 = set(urls1.keys()) - common_urls
+    non_common_urls2 = set(urls2.keys()) - common_urls
+    total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
-    # Calculate Domain similarity with different URLs
+    similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
+
+    # Calculate similarity for Domains
     common_domains = set(domains1.keys()).intersection(set(domains2.keys()))
-    domain_similarity_rate = len(common_domains) / len(set(domains1.keys()).union(set(domains2.keys()))) * 100 if domains1 or domains2 else 0
+    non_common_domains1 = set(domains1.keys()) - common_domains
+    non_common_domains2 = set(domains2.keys()) - common_domains
+    total_domains = len(set(domains1.keys()).union(set(domains2.keys())))
 
-    return url_similarity_rate, domain_similarity_rate
+    similarity_rate_domain = (len(common_domains) / total_domains) * 100 if total_domains > 0 else 0
+    
+    return (common_urls, non_common_urls1, non_common_urls2, similarity_rate_url, 
+            common_domains, non_common_domains1, non_common_domains2, similarity_rate_domain)
 
-# Input fields for keywords, language, and country
+# User Interface with Streamlit
 st.title("SERP Similarity Analysis")
-keyword1 = st.text_input("Enter first keyword:", "")
-keyword2 = st.text_input("Enter second keyword:", "")
-language1 = st.selectbox("Select language for first keyword:", ["en", "fr"])
-language2 = st.selectbox("Select language for second keyword:", ["en", "fr"])
-country1 = st.selectbox("Select country for first keyword:", ["us", "gb", "fr"])
-country2 = st.selectbox("Select country for second keyword:", ["us", "gb", "fr"])
+st.markdown("---")
+
+# Input fields for keywords
+col1, col2 = st.columns(2)
+
+with col1:
+    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
+    language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country1 = st.selectbox("Country (Keyword 1):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+
+with col2:
+    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
+    language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country2 = st.selectbox("Country (Keyword 2):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+
+st.markdown("---")
 
 if st.button("Analyze"):
-    # Scrape SERPs
-    results_keyword1 = scrape_serp(keyword1, language1, country1)
-    results_keyword2 = scrape_serp(keyword2, language2, country2)
+    if keyword1 and keyword2:
+        # Scrape the results for both keywords
+        results_keyword1 = scrape_serp(keyword1, language1, country1)
+        results_keyword2 = scrape_serp(keyword2, language2, country2)
 
-    # Calculate similarities
-    url_similarity_rate, domain_similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
+        # Calculate similarity
+        (common_urls, non_common_urls1, non_common_urls2, similarity_rate_url, 
+         common_domains, non_common_domains1, non_common_domains2, similarity_rate_domain) = calculate_similarity(results_keyword1, results_keyword2)
 
-    # Display results
-    st.subheader("Results")
-    st.write(f"Similarity Rate URL: {url_similarity_rate:.2f}%")
-    st.write(f"Domain Similarity Rate (with different URLs): {domain_similarity_rate:.2f}%")
+        # Analyze titles
+        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
-    # Show results
-    st.write("Results for first keyword:")
-    for url, title in results_keyword1:
-        st.write(f"- [{title}]({url})")
-    
-    st.write("Results for second keyword:")
-    for url, title in results_keyword2:
-        st.write(f"- [{title}]({url})")
+        # Display results
+        st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
+        st.write(f"**Similarity Rate Domain: {similarity_rate_domain:.2f}%**")
+        
+        # Summary on keyword usage
+        if counts['common_both'] > 0:
+            st.success("Both keywords seem to contribute to being a common URL in the title.")
+        elif counts['common_keyword1'] > counts['common_keyword2']:
+            st.warning(f"It would be better to include **{keyword1}** in your title to optimize your ranking.")
+        elif counts['common_keyword2'] > counts['common_keyword1']:
+            st.warning(f"It would be better to include **{keyword2}** in your title to optimize your ranking.")
+        else:
+            st.info("Neither keyword seems effective alone. Consider other optimizations.")
 
-# Disclaimer
-st.write("Disclaimer: This tool is for educational purposes only. Actual SERP results may vary.")
-st.write("For more information, visit [your website](https://yourwebsite.com).")
+        st.markdown("---")
+        st.subheader("SERP Results")
+        
+        # Display search links with encoded keywords
+        encoded_keyword1 = urllib.parse.quote(keyword1)
+        encoded_keyword2 = urllib.parse.quote(keyword2)
+        st.markdown(f"[View SERP for Keyword: {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
+        st.markdown(f"[View SERP for Keyword: {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
+
+        # Display SERP results
+        with st.expander(f"Details for Keyword: {keyword1}"):
+            st.write(f"**SERP for Keyword: {keyword1}**")
+            for url, title in results_keyword1:
+                st.markdown(f"- [{title}]({url})")
+
+        with st.expander(f"Details for Keyword: {keyword2}"):
+            st.write(f"**SERP for Keyword: {keyword2}**")
+            for url, title in results_keyword2:
+                st.markdown(f"- [{title}]({url})")
+
+        st.markdown("---")
+        st.subheader("Common URLs")
+        for url in common_urls:
+            st.write(url)
+
+        st.markdown("---")
+        st.subheader("Common Domains")
+        for domain in common_domains:
+            st.write(domain)
+
+        # Display URLs unique to Keyword 1
+        with st.expander(f"URLs unique to Keyword: {keyword1}"):
+            for url in non_common_urls1:
+                st.write(url)
+
+        # Display URLs unique to Keyword 2
+        with st.expander(f"URLs unique to Keyword: {keyword2}"):
+            for url in non_common_urls2:
+                st.write(url)
