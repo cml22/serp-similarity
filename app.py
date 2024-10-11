@@ -94,4 +94,77 @@ with col1:
 with col2:
     keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
     language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Country (Keyw
+    country2 = st.selectbox("Country (Keyword 2):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
+
+# Slider to choose the number of URLs to scrape
+num_urls = st.slider("Select the number of URLs to scrape (between 10 and 100):", min_value=10, max_value=100, value=10, step=10)
+
+st.markdown("---")
+
+if st.button("Analyze"):
+    if keyword1 and keyword2:
+        # Scrape the results for both keywords
+        results_keyword1 = scrape_serp(keyword1, language1, country1, num_urls)
+        results_keyword2 = scrape_serp(keyword2, language2, country2, num_urls)
+
+        # Calculate similarity
+        common_urls, urls1, urls2, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
+
+        # Analyze titles
+        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
+
+        # Display results
+        st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
+        
+        # Summary on keyword usage
+        if counts['common_both'] > 0:
+            st.success("Both keywords seem to contribute to being a common URL in the title.")
+        elif counts['common_keyword1'] > counts['common_keyword2']:
+            st.warning(f"It would be better to include **{keyword1}** in your title to optimize your ranking.")
+        elif counts['common_keyword2'] > counts['common_keyword1']:
+            st.warning(f"It would be better to include **{keyword2}** in your title to optimize your ranking.")
+        else:
+            st.info("Neither keyword seems effective alone. Consider other optimizations.")
+
+        st.markdown("---")
+        st.subheader("SERP Results")
+        
+        # Display search links with encoded keywords and the correct language/country
+        encoded_keyword1 = urllib.parse.quote(keyword1)
+        encoded_keyword2 = urllib.parse.quote(keyword2)
+
+        # Generate SERP links with language and country parameters
+        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}"
+        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}"
+
+        # Display the clickable links for the SERPs
+        st.markdown(f"[View SERP for Keyword: {keyword1}]({serp_url1})")
+        st.markdown(f"[View SERP for Keyword: {keyword2}]({serp_url2})")
+
+        # Display SERP results
+        with st.expander(f"Details for Keyword: {keyword1}"):
+            st.write(f"**SERP for Keyword: {keyword1}**")
+            for url, title in results_keyword1:
+                st.markdown(f"- [{title}]({url})")
+
+        with st.expander(f"Details for Keyword: {keyword2}"):
+            st.write(f"**SERP for Keyword: {keyword2}**")
+            for url, title in results_keyword2:
+                st.markdown(f"- [{title}]({url})")
+
+        st.markdown("---")
+        st.subheader("Common URLs")
+        for url in common_urls:
+            st.write(url)
+
+        # Display URLs unique to Keyword 1
+        with st.expander(f"URLs unique to Keyword: {keyword1}"):
+            unique_urls1 = set(urls1.keys()) - common_urls
+            for url in unique_urls1:
+                st.write(url)
+
+        # Display URLs unique to Keyword 2
+        with st.expander(f"URLs unique to Keyword: {keyword2}"):
+            unique_urls2 = set(urls2.keys()) - common_urls
+            for url in unique_urls2:
+                st.write(url)
