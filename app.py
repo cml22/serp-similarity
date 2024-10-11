@@ -94,52 +94,30 @@ if st.button("Analyze"):
         counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
         # Display results
-        st.write(f"**Similarity Rate: {similarity_rate:.2f}%**")
-        
-        # Summary on keyword usage
-        if counts['common_both'] > 0:
-            st.success("Both keywords in the title seem to contribute to being a common URL.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"It would be better to include **{keyword1}** in your title for better optimization.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"It would be better to include **{keyword2}** in your title for better optimization.")
-        else:
-            st.info("Neither of the keywords seems to be effective alone. Consider other optimizations.")
+        st.subheader("Results")
+        st.write(f"Similarity Rate: {similarity_rate:.2f}% ({len(common_urls)} common URLs)")
 
-        st.markdown("---")  # Separator line
-        st.subheader("SERP Results")
-        
-        # Display search links with encoding
-        encoded_keyword1 = urllib.parse.quote(keyword1)
-        encoded_keyword2 = urllib.parse.quote(keyword2)
-        st.markdown(f"[View SERP for Keyword: {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
-        st.markdown(f"[View SERP for Keyword: {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
-
-        # Display SERP results
-        with st.expander(f"Details SERP for Keyword: {keyword1}"):
-            st.write(f"**SERP for Keyword: {keyword1}**")
-            for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")  # Clickable link
-
-        with st.expander(f"Details SERP for Keyword: {keyword2}"):
-            st.write(f"**SERP for Keyword: {keyword2}**")
-            for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")  # Clickable link
-
-        st.markdown("---")  # Separator line
-        st.subheader("Common URLs")
+        st.markdown("### Common URLs")
         for url in common_urls:
             st.write(url)
 
-        # Display URLs only present for Keyword 1
-        with st.expander(f"URLs only for Keyword: {keyword1}"):
-            for url in non_common_urls1:
-                st.write(url)
+        st.markdown("### URLs only in Keyword 1")
+        for url in non_common_urls1:
+            st.write(url)
 
-        # Display URLs only present for Keyword 2
-        with st.expander(f"URLs only for Keyword: {keyword2}"):
-            for url in non_common_urls2:
-                st.write(url)
+        st.markdown("### URLs only in Keyword 2")
+        for url in non_common_urls2:
+            st.write(url)
 
-    else:
-        st.error("Please enter both keywords.")
+        st.markdown("---")  # Separator line
+
+        # Display title analysis
+        st.subheader("Title Analysis")
+        st.write(f"Keyword 1 in titles: {counts['common_keyword1']} occurrences")
+        st.write(f"Keyword 2 in titles: {counts['common_keyword2']} occurrences")
+        st.write(f"Both keywords in titles: {counts['common_both']} occurrences")
+
+# Backlink to Charles Migaud
+st.markdown("---")  # Separator line
+st.markdown("[Charles Migaud](https://charles-migaud.fr/)")
+
