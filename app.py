@@ -2,6 +2,8 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import pycountry
+import langcodes
 
 def scrape_serp(keyword, lang, country):
     # Fonction de scraping pour récupérer les URLs du SERP
@@ -16,65 +18,57 @@ def scrape_serp(keyword, lang, country):
         results.append(link)
     return results[:10]
 
+# Obtenir les noms complets des langues et des pays
+languages = [(lang.alpha_2, lang.name) for lang in langcodes.Language]
+countries = [(country.alpha_2, country.name) for country in pycountry.countries]
+
 st.title("Analyse de Similarité SERP")
 
-# Entrée des mots-clés sans pré-remplissage
+# Entrée des mots-clés
 col1, col2 = st.columns(2)
 
 with col1:
     keyword1 = st.text_input("Entrez le mot-clé 1", "")
-    lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
-    country1 = st.selectbox("Pays du mot-clé 1", options=["FR", "US", "ES", "DE", "IT"], index=0)
+    lang1 = st.selectbox("Langue du mot-clé 1", options=[name for _, name in languages])
+    country1 = st.selectbox("Pays du mot-clé 1", options=[name for _, name in countries])
 
 with col2:
     keyword2 = st.text_input("Entrez le mot-clé 2", "")
-    lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
-    country2 = st.selectbox("Pays du mot-clé 2", options=["FR", "US", "ES", "DE", "IT"], index=0)
+    lang2 = st.selectbox("Langue du mot-clé 2", options=[name for _, name in languages])
+    country2 = st.selectbox("Pays du mot-clé 2", options=[name for _, name in countries])
 
-if st.button("Analyser"):
-    # Scraping des SERPs
-    urls1 = scrape_serp(keyword1, lang1, country1)
-    urls2 = scrape_serp(keyword2, lang2, country2)
+# Bouton pour lancer l'analyse
+if st.button("Analyser la similarité"):
+    if keyword1 and keyword2:
+        # Convertir les noms de langue et pays en codes
+        lang1_code = [code for code, name in languages if name == lang1][0]
+        lang2_code = [code for code, name in languages if name == lang2][0]
+        country1_code = [code for code, name in countries if name == country1][0]
+        country2_code = [code for code, name in countries if name == country2][0]
 
-    # Calcul du taux de similarité
-    common_urls = list(set(urls1) & set(urls2))
-    similarity_rate = len(common_urls) / 10 * 100  # Sur 10 URLs
+        # Scraper les SERPs
+        results1 = scrape_serp(keyword1, lang1_code, country1_code)
+        results2 = scrape_serp(keyword2, lang2_code, country2_code)
 
-    # Affichage des résultats
-    st.subheader("Résultats de l'analyse")
-    st.write(f"Taux de similarité : {similarity_rate:.2f}%")
-    st.write(f"URLs communes : {len(common_urls)}")
+        # Comparer les résultats
+        common_urls = set(results1) & set(results2)
+        unique_to_keyword1 = set(results1) - set(results2)
+        unique_to_keyword2 = set(results2) - set(results1)
 
-    # Affichage des URLs dans deux colonnes
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader(f"URLs pour le mot-clé 1 : {keyword1}")
-        for url in urls1:
-            st.markdown(f"[{url}]({url})")  # Affichage des URLs en tant que liens cliquables
-    
-    with col2:
-        st.subheader(f"URLs pour le mot-clé 2 : {keyword2}")
-        for url in urls2:
-            st.markdown(f"[{url}]({url})")  # Affichage des URLs en tant que liens cliquables
-    
-    # Affichage des URLs communes
-    st.subheader("URLs communes")
-    for url in common_urls:
-        st.write(url)
+        # Afficher les résultats
+        st.write("### Résultats pour le mot-clé 1")
+        st.write(results1)
+        
+        st.write("### Résultats pour le mot-clé 2")
+        st.write(results2)
 
-    # Comparaison visuelle
-    st.subheader("Comparaison des SERPs")
-    comparison_df = pd.DataFrame({
-        'URL': list(set(urls1 + urls2)),
-        'Position Mot-clé 1': [urls1.index(url) + 1 if url in urls1 else None for url in set(urls1 + urls2)],
-        'Position Mot-clé 2': [urls2.index(url) + 1 if url in urls2 else None for url in set(urls1 + urls2)]
-    }).dropna()
+        st.write("### URLs communes")
+        st.write(list(common_urls))
 
-    for index, row in comparison_df.iterrows():
-        if row['Position Mot-clé 1'] == row['Position Mot-clé 2']:
-            st.write(f"🔄 {row['URL']} (Stable)")
-        elif row['Position Mot-clé 1'] < row['Position Mot-clé 2']:
-            st.write(f"⬆️ {row['URL']} (Améliorée de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
-        else:
-            st.write(f"⬇️ {row['URL']} (Diminution de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']}
+        st.write("### URLs uniques à mot-clé 1")
+        st.write(list(unique_to_keyword1))
+
+        st.write("### URLs uniques à mot-clé 2")
+        st.write(list(unique_to_keyword2))
+    else:
+        st.error("Veuillez entrer les deux mots-clés.")
