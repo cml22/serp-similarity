@@ -76,8 +76,15 @@ def calculate_similarity(results1, results2):
     total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return common_urls, urls1, urls2, similarity_rate_url
+
+    # Create a dictionary to store the rank of common URLs
+    common_url_ranks = {}
+    for url in common_urls:
+        rank_keyword1 = list(urls1.keys()).index(url) + 1  # +1 to convert 0-based index to rank
+        rank_keyword2 = list(urls2.keys()).index(url) + 1  # +1 to convert 0-based index to rank
+        common_url_ranks[url] = (rank_keyword1, rank_keyword2)
+
+    return common_urls, urls1, urls2, common_url_ranks, similarity_rate_url
 
 # User Interface with Streamlit
 st.title("SERP Similarity Analysis")
@@ -108,7 +115,7 @@ if st.button("Analyze"):
         results_keyword2 = scrape_serp(keyword2, language2, country2, num_urls)
 
         # Calculate similarity
-        common_urls, urls1, urls2, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, urls1, urls2, common_url_ranks, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
 
         # Analyze titles
         counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
@@ -144,22 +151,19 @@ if st.button("Analyze"):
         # Display SERP results
         with st.expander(f"Details for Keyword: {keyword1}"):
             st.write(f"**SERP for Keyword: {keyword1}**")
-            for rank, (url, title) in enumerate(results_keyword1, start=1):
-                st.markdown(f"- [{title}]({url}) (Rank: {rank})")
+            for url, title in results_keyword1:
+                st.markdown(f"- [{title}]({url})")
 
         with st.expander(f"Details for Keyword: {keyword2}"):
             st.write(f"**SERP for Keyword: {keyword2}**")
-            for rank, (url, title) in enumerate(results_keyword2, start=1):
-                st.markdown(f"- [{title}]({url}) (Rank: {rank})")
+            for url, title in results_keyword2:
+                st.markdown(f"- [{title}]({url})")
 
         st.markdown("---")
-        st.subheader("Common URLs")
-        if common_urls:
-            for rank, url in enumerate(common_urls, start=1):
-                title = urls1[url] if url in urls1 else urls2[url]  # Get title from either SERP
-                st.write(f"- [{title}]({url}) (Rank: {rank})")
-        else:
-            st.info("No common URLs found.")
+        st.subheader("Common URLs and Rankings")
+        for url in common_urls:
+            rank_keyword1, rank_keyword2 = common_url_ranks[url]
+            st.write(f"- {url} | Rank in Keyword 1: {rank_keyword1} | Rank in Keyword 2: {rank_keyword2}")
 
         # Display URLs unique to Keyword 1
         with st.expander(f"URLs unique to Keyword: {keyword1}"):
