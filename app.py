@@ -28,7 +28,7 @@ def scrape_serp(keyword, language, country):
         if link:
             results.append((link['href'], link.get_text()))
 
-    return results
+    return url, results  # Retourne également l'URL de recherche
 
 def calculate_similarity(results1, results2):
     # Calcul des URLs communes
@@ -51,25 +51,29 @@ col1, col2 = st.columns(2)
 
 with col1:
     keyword1 = st.text_input("Mot-clé 1 :")
-    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt"])
-    country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt", "nl", "da", "fi", "no", "sv", "ru", "pl", "ja", "zh", "tr"])
+    country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn", "be", "ch", "at", "nl", "dk", "fi", "no", "se", "jp", "cn", "hk", "sg", "in", "br", "au"])
 
 with col2:
     keyword2 = st.text_input("Mot-clé 2 :")
-    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt"])
-    country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt", "nl", "da", "fi", "no", "sv", "ru", "pl", "ja", "zh", "tr"])
+    country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn", "be", "ch", "at", "nl", "dk", "fi", "no", "se", "jp", "cn", "hk", "sg", "in", "br", "au"])
 
 if st.button("Analyser"):
     if keyword1 and keyword2:
         # Scraper les résultats pour les deux mots-clés
-        results_keyword1 = scrape_serp(keyword1, language1, country1)
-        results_keyword2 = scrape_serp(keyword2, language2, country2)
+        url1, results_keyword1 = scrape_serp(keyword1, language1, country1)
+        url2, results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
         common_urls, similarity_rate, common_count, urls1, urls2 = calculate_similarity(results_keyword1, results_keyword2)
 
         # Affichage du taux de similarité avec le nombre d'URLs communes
         st.write(f"**Taux de similarité : {similarity_rate:.2f}% ({common_count} URLs communes)**")
+
+        # Affichage des URLs de recherche
+        st.write(f"**URL de recherche pour le Mot-clé 1 :** [{url1}]({url1})")
+        st.write(f"**URL de recherche pour le Mot-clé 2 :** [{url2}]({url2})")
 
         # Affichage des résultats de SERP sous forme d'accordéon
         with st.expander("Afficher SERP pour le Mot-clé 1"):
@@ -85,7 +89,4 @@ if st.button("Analyser"):
         # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
-            st.write(f"[{urls1[url]}]({url})")
-
-    else:
-        st.error("Veuillez entrer les deux mots-clés.")
+     
