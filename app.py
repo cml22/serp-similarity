@@ -18,7 +18,8 @@ st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr
 
 def scrape_serp(keyword, language, country, num_results):
     query = urllib.parse.quote(keyword)
-    url = f"https://www.google.com/search?q={query}&hl={language}&gl={country}"
+    # Adding num={num_results} parameter to scrape the specified number of results
+    url = f"https://www.google.com/search?q={query}&hl={language}&gl={country}&num={num_results}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
@@ -134,8 +135,8 @@ if st.button("Analyze"):
         encoded_keyword2 = urllib.parse.quote(keyword2)
 
         # Generate SERP links with language and country parameters
-        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}"
-        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}"
+        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}&num={num_urls}"
+        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}&num={num_urls}"
 
         # Display the clickable links for the SERPs
         st.markdown(f"[View SERP for Keyword: {keyword1}]({serp_url1})")
@@ -160,7 +161,7 @@ if st.button("Analyze"):
         for url in common_urls:
             rank_keyword1 = next((i + 1 for i, (u, _) in enumerate(results_keyword1) if u == url), "Not Found")
             rank_keyword2 = next((i + 1 for i, (u, _) in enumerate(results_keyword2) if u == url), "Not Found")
-            common_urls_data.append({"URL": url, "Rank in Keyword 1": rank_keyword1, "Rank in Keyword 2": rank_keyword2})
+            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword1, f"Rank in '{keyword2}'": rank_keyword2})
 
         # Display the table
         st.table(common_urls_data)
