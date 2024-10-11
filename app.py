@@ -54,7 +54,9 @@ with col2:
     st.header("Mot-clé 2")
     keyword2 = st.text_input("Mot-clé 2", key="keyword2")
     lang2 = st.selectbox("Langue pour le deuxième mot-clé", options=list(lang_options.keys()), key="lang2")
-    country2 = st.selectbox("Pays pour le deuxième mot-clé", options=list(country_options.keys()), key="country2")
+    
+    # Préselectionner "France" dans les pays
+    country2 = st.selectbox("Pays pour le deuxième mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country2")
 
 # Bouton pour lancer l'analyse
 if st.button("Analyser"):
