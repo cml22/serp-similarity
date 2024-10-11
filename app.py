@@ -197,4 +197,16 @@ if st.button("Analyze"):
         
         # Summary on keyword usage
         if counts['common_both'] > 0:
-            st
+            st.write(f"**Common Titles with Both Keywords:** {counts['common_both']}")
+        st.write(f"**Titles with Keyword 1:** {counts['common_keyword1']}")
+        st.write(f"**Titles with Keyword 2:** {counts['common_keyword2']}")
+
+        # Display common URLs
+        if common_urls:
+            st.write("**Common URLs:**")
+            for url in common_urls:
+                st.write(f"- {url}")
+
+        st.success("Analysis complete!")
+    else:
+        st.error("Please enter both keywords.")
