@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# Must be the first Streamlit command
+# Set up the Streamlit page
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
 
 # Purpose of the tool
@@ -18,11 +18,11 @@ st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr
 
 def scrape_serp(keyword, language, country):
     query = urllib.parse.quote(keyword)
-    
+
     # Update the country code for the UK
     if country == "gb":
         country = "co.uk"
-        
+
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
 
     headers = {
@@ -45,11 +45,6 @@ def scrape_serp(keyword, language, country):
             results.append((link['href'], title))
 
     return results
-
-def extract_domain(url):
-    """Extract domain name from URL."""
-    parsed_url = urllib.parse.urlparse(url)
-    return parsed_url.netloc
 
 def analyze_titles(results, keyword1, keyword2):
     counts = {
@@ -76,27 +71,15 @@ def calculate_similarity(results1, results2):
     urls1 = {result[0]: result[1] for result in results1}
     urls2 = {result[0]: result[1] for result in results2}
 
-    # Extract domains
-    domains1 = {extract_domain(url): title for url, title in results1}
-    domains2 = {extract_domain(url): title for url, title in results2}
-
     # Calculate similarity for URLs
     common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
+    non_common_urls1 = set(urls1.keys()) - common_urls
+    non_common_urls2 = set(urls2.keys()) - common_urls
     total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
 
-    # Calculate unique domains for each keyword
-    unique_domains1 = set(domains1.keys()) - set(domains2.keys())  # Domains only in Keyword 1
-    unique_domains2 = set(domains2.keys()) - set(domains1.keys())  # Domains only in Keyword 2
-
-    # Calculate total unique domains
-    total_unique_domains = len(unique_domains1) + len(unique_domains2)
-
-    # Similarity rate for unique domains
-    similarity_rate_domain = (len(unique_domains1) + len(unique_domains2)) / total_unique_domains * 100 if total_unique_domains > 0 else 0
-
-    return (common_urls, similarity_rate_url, unique_domains1, unique_domains2, similarity_rate_domain)
+    return common_urls, non_common_urls1, non_common_urls2, similarity_rate_url
 
 # User Interface with Streamlit
 st.title("SERP Similarity Analysis")
@@ -124,15 +107,13 @@ if st.button("Analyze"):
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculate similarity
-        (common_urls, similarity_rate_url, 
-         unique_domains1, unique_domains2, similarity_rate_domain) = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, non_common_urls1, non_common_urls2, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
 
         # Analyze titles
         counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
         # Display results
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
-        st.write(f"**Similarity Rate Domain: {similarity_rate_domain:.2f}%**")
         
         # Summary on keyword usage
         if counts['common_both'] > 0:
@@ -170,10 +151,13 @@ if st.button("Analyze"):
             st.write(url)
 
         st.markdown("---")
-        st.subheader("Unique Domains for Keyword 1")
-        for domain in unique_domains1:
-            st.write(domain)
+        
+        # Display URLs unique to Keyword 1
+        with st.expander(f"URLs unique to Keyword: {keyword1}"):
+            for url in non_common_urls1:
+                st.write(url)
 
-        st.subheader("Unique Domains for Keyword 2")
-        for domain in unique_domains2:
-            st.write(domain)
+        # Display URLs unique to Keyword 2
+        with st.expander(f"URLs unique to Keyword: {keyword2}"):
+            for url in non_common_urls2:
+                st.write(url)
