@@ -67,4 +67,14 @@ if st.button("Analyser"):
     st.subheader("Comparaison des SERPs")
     comparison_df = pd.DataFrame({
         'URL': list(set(urls1 + urls2)),
-        'Position Mot-clé 1': [urls1.inde
+        'Position Mot-clé 1': [urls1.index(url) + 1 if url in urls1 else None for url in set(urls1 + urls2)],
+        'Position Mot-clé 2': [urls2.index(url) + 1 if url in urls2 else None for url in set(urls1 + urls2)]
+    }).dropna()
+
+    for index, row in comparison_df.iterrows():
+        if row['Position Mot-clé 1'] == row['Position Mot-clé 2']:
+            st.write(f"🔄 {row['URL']} (Stable)")
+        elif row['Position Mot-clé 1'] < row['Position Mot-clé 2']:
+            st.write(f"⬆️ {row['URL']} (Améliorée de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
+        else:
+            st.write(f"⬇️ {row['URL']} (Diminution de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']}
