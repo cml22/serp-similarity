@@ -34,6 +34,8 @@ col1, col2 = st.columns(2)
 with col1:
     st.header("Mot-clé 1")
     keyword1 = st.text_input("Entrez le mot-clé 1")
+    
+    # Pré-sélection des options pour le mot-clé 1
     lang1 = st.selectbox("Langue", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"))
     country1 = st.selectbox("Pays", options=list(country_options.keys()), index=list(country_options.keys()).index("France"))
 
@@ -41,6 +43,8 @@ with col1:
 with col2:
     st.header("Mot-clé 2")
     keyword2 = st.text_input("Entrez le mot-clé 2")
+    
+    # Pré-sélection des mêmes options pour le mot-clé 2
     lang2 = st.selectbox("Langue", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"))
     country2 = st.selectbox("Pays", options=list(country_options.keys()), index=list(country_options.keys()).index("France"))
 
