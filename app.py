@@ -48,19 +48,19 @@ col1, col2 = st.columns(2)
 
 with col1:
     keyword1 = st.text_input("Mot-clé 1 :")
-    
+    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt"])
+    country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+
 with col2:
     keyword2 = st.text_input("Mot-clé 2 :")
-
-# Sélection de la langue et du pays
-language = st.selectbox("Langue :", ["fr", "en", "es", "de", "it", "pt"])
-country = st.selectbox("Pays :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt"])
+    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt"])
+    country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 if st.button("Analyser"):
     if keyword1 and keyword2:
         # Scraper les résultats pour les deux mots-clés
-        results_keyword1 = scrape_serp(keyword1, language, country)
-        results_keyword2 = scrape_serp(keyword2, language, country)
+        results_keyword1 = scrape_serp(keyword1, language1, country1)
+        results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
         common_urls, similarity_rate, common_count = calculate_similarity(results_keyword1, results_keyword2)
