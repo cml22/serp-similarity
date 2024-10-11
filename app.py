@@ -1,15 +1,10 @@
-import streamlit as st 
+import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# Purpose of the tool
-st.markdown("### Purpose of this Tool")
-st.write("This tool analyzes the similarity between the SERPs (Search Engine Results Pages) of two keywords, helping users understand how to optimize their titles effectively.")
-
-# Disclaimer
-st.markdown("### Disclaimer")
-st.write("Optimizing your title alone is not sufficient for SEO. Consider other on-page factors and content quality for better results.")
+# Set up page configuration
+st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
 
 def scrape_serp(keyword, language, country):
     query = urllib.parse.quote(keyword)
@@ -22,7 +17,7 @@ def scrape_serp(keyword, language, country):
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        st.error("Error fetching the results.")
+        st.error("Error retrieving results.")
         return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -61,97 +56,4 @@ def calculate_similarity(results1, results2):
     urls2 = {result[0]: result[1] for result in results2}
 
     common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
-    non_common_urls1 = set(urls1.keys()) - common_urls
-    non_common_urls2 = set(urls2.keys()) - common_urls
-    total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
-
-    similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return common_urls, non_common_urls1, non_common_urls2, similarity_rate
-
-# User interface with Streamlit
-st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
-st.title("SERP Similarity Analysis")
-st.markdown("---")  # Separator line
-
-# Keyword input
-col1, col2 = st.columns(2)
-
-with col1:
-    keyword1 = st.text_input("Enter Keyword 1:", placeholder="E.g., digital marketing")
-    language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country1 = st.selectbox("Country (Keyword 1):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
-
-with col2:
-    keyword2 = st.text_input("Enter Keyword 2:", placeholder="E.g., SEO")
-    language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Country (Keyword 2):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
-
-st.markdown("---")  # Separator line
-
-if st.button("Analyze"):
-    if keyword1 and keyword2:
-        # Scrape results for both keywords
-        results_keyword1 = scrape_serp(keyword1, language1, country1)
-        results_keyword2 = scrape_serp(keyword2, language2, country2)
-
-        # Calculate similarity
-        common_urls, non_common_urls1, non_common_urls2, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
-
-        # Analyze titles
-        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
-
-        # Display results
-        st.write(f"**Similarity Rate: {similarity_rate:.2f}%**")
-        
-        # Summary on keyword usage
-        if counts['common_both'] > 0:
-            st.success("Both keywords in the title seem to contribute to being a common URL.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"It would be better to include **{keyword1}** in your title for optimal ranking.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"It would be better to include **{keyword2}** in your title for optimal ranking.")
-        else:
-            st.info("Neither keyword seems effective alone. Consider other optimizations.")
-
-        st.markdown("---")  # Separator line
-        st.subheader("SERP Results")
-        
-        # Display search links with encoding
-        encoded_keyword1 = urllib.parse.quote(keyword1)
-        encoded_keyword2 = urllib.parse.quote(keyword2)
-        st.markdown(f"[View SERP for Keyword: {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
-        st.markdown(f"[View SERP for Keyword: {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
-
-        # Display SERP results
-        with st.expander(f"SERP Details for Keyword: {keyword1}"):
-            st.write(f"**SERP for Keyword: {keyword1}**")
-            for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")  # Clickable link
-
-        with st.expander(f"SERP Details for Keyword: {keyword2}"):
-            st.write(f"**SERP for Keyword: {keyword2}**")
-            for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")  # Clickable link
-
-        st.markdown("---")  # Separator line
-        st.subheader("Common URLs")
-        for url in common_urls:
-            st.write(url)
-
-        # Display URLs only present for Keyword 1
-        with st.expander(f"URLs only for Keyword: {keyword1}"):
-            for url in non_common_urls1:
-                st.write(url)
-
-        # Display URLs only present for Keyword 2
-        with st.expander(f"URLs only for Keyword: {keyword2}"):
-            for url in non_common_urls2:
-                st.write(url)
-
-    else:
-        st.error("Please enter both keywords.")
-
-# Backlink at the bottom
-st.markdown("---")  # Separator line
-st.markdown("**Tool made with love by [Charles Migaud](https://charles-migaud.fr)**")
+    non_common_urls1 = set(urls1.keys()) - common
