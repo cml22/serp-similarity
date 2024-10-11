@@ -45,8 +45,10 @@ if st.button("Analyser"):
         results2 = scrape_serp(query2, lang=lang2, region=region2)
 
         # Calcul des URLs communes
-        common_urls = set(results1) & set(results2)
-        total_urls = len(set(results1) | set(results2))
+        set_results1 = set(results1)
+        set_results2 = set(results2)
+        common_urls = set_results1 & set_results2
+        total_urls = len(set_results1 | set_results2)
         similarity_rate = (len(common_urls) / total_urls * 100) if total_urls > 0 else 0
 
         # Affichage des résultats
@@ -64,5 +66,24 @@ if st.button("Analyser"):
         if common_urls:
             st.subheader("URLs communes")
             st.write(pd.DataFrame(list(common_urls), columns=["URLs"]))
+        else:
+            st.write("Aucune URL commune trouvée.")
+
+        # Compte des domaines
+        domain_counts = Counter(url.split('/')[2] for url in results1 + results2)
+        common_domains = set(domain for domain, count in domain_counts.items() if count > 1)
+        st.write(f"Domaines communs : {len(common_domains)}")
+        st.write(pd.DataFrame(list(common_domains), columns=["Domaines"]))
+
+        # Nouvelles URLs, URLs améliorées, URLs déclinées, URLs perdues
+        new_urls = set_results2 - set_results1
+        improved_urls = {url for url in results2 if url in set_results1 and results2.index(url) < results1.index(url)}
+        declined_urls = {url for url in results1 if url in set_results2 and results1.index(url) < results2.index(url)}
+        lost_urls = set_results1 - set_results2
+
+        st.write(f"Nouvelles URLs : {len(new_urls)}")
+        st.write(f"URLs améliorées : {len(improved_urls)}")
+        st.write(f"URLs déclinées : {len(declined_urls)}")
+        st.write(f"URLs perdues : {len(lost_urls)}")
     else:
         st.warning("Veuillez entrer les deux mots-clés pour effectuer l'analyse.")
