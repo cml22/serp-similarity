@@ -197,21 +197,27 @@ if st.button("Analyze"):
         st.write(f"**Similarity Rate (Domains):** {similarity_rate_domain:.2f}%")
 
         # Display common URLs
+        # Display common URLs
         st.write("### Common URLs:")
-        for url in common_urls:
-            st.markdown(f"- [{url}]({url})")
-        
-        # Display counts
-        st.write("### Title Analysis:")
-        st.write(f"- Titles containing **Keyword 1**: {counts['common_keyword1']}")
-        st.write(f"- Titles containing **Keyword 2**: {counts['common_keyword2']}")
-        st.write(f"- Titles containing both keywords: {counts['common_both']}")
-
-        # Additional output if needed
-        if counts['common_both'] > 0:
-            st.success("There are titles that match both keywords.")
+        if common_urls:
+            for url in common_urls:
+                st.write(url)
         else:
-            st.warning("No titles found that match both keywords.")
+            st.write("No common URLs found.")
+
+        # Display the results for each keyword's SERP
+        st.write("### SERP Results for Keyword 1:")
+        for url, title in results_keyword1:
+            st.write(f"- **{title}**: [Link]({url})")
+
+        st.write("### SERP Results for Keyword 2:")
+        for url, title in results_keyword2:
+            st.write(f"- **{title}**: [Link]({url})")
 
     else:
-        st.warning("Please enter both keywords to analyze.")
+        st.warning("Please enter both keywords to proceed.")
+
+# Optionally, you can add a footer
+st.markdown("---")
+st.write("**Note:** This tool is in development, and results may vary based on changes in Google SERP structures.")
+
