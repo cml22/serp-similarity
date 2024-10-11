@@ -19,7 +19,6 @@ st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr
 
 def scrape_serp(keyword, language, country, num_results):
     query = urllib.parse.quote(keyword)
-    # Adding num={num_results} parameter to scrape the specified number of results
     url = f"https://www.google.com/search?q={query}&hl={language}&gl={country}&num={num_results}"
 
     headers = {
@@ -35,7 +34,7 @@ def scrape_serp(keyword, language, country, num_results):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     results = []
-    for g in soup.find_all('div', class_='g')[:num_results]:  # Limit the number of results
+    for g in soup.find_all('div', class_='g')[:num_results]:
         link = g.find('a', href=True)
         if link:
             title = g.find('h3').get_text() if g.find('h3') else "Title not found"
@@ -55,8 +54,8 @@ def analyze_titles(results, keyword1, keyword2):
         "common_both": 0,
     }
 
-    urls_common = {url: title for url, title in results[0]}  # SERP 1
-    urls_non_common = {url: title for url, title in results[1]}  # SERP 2
+    urls_common = {url: title for url, title in results[0]}
+    urls_non_common = {url: title for url, title in results[1]}
 
     for url, title in urls_common.items():
         if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
@@ -118,7 +117,6 @@ if st.button("Analyze"):
         # Display results
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
 
-        # Résumé sur l'utilisation des mots-clés
         if counts['common_both'] > 0:
             st.success("Les deux mots-clés semblent contribuer à être une URL commune dans le titre.")
         elif keyword1 in keyword2:
@@ -130,8 +128,8 @@ if st.button("Analyze"):
         else:
             st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
 
-        st.markdown("---")  # Cette ligne doit être alignée avec le début de la condition
-        st.subheader("SERP Results")  # Idem ici
+        st.markdown("---")
+        st.subheader("SERP Results")
 
         # Display search links with encoded keywords and the correct language/country
         encoded_keyword1 = urllib.parse.quote(keyword1)
@@ -156,12 +154,30 @@ if st.button("Analyze"):
             for rank, (url, title) in enumerate(results_keyword2, start=1):
                 st.markdown(f"{rank}. [{title}]({url})")
 
-        st.markdown("---")
-        st.subheader("Common URLs and Rankings")
-
         # Prepare data for the table
         common_urls_data = []
         for url in common_urls:
             rank_keyword1 = next((i + 1 for i, (u, _) in enumerate(results_keyword1) if u == url), "Not Found")
             rank_keyword2 = next((i + 1 for i, (u, _) in enumerate(results_keyword2) if u == url), "Not Found")
-            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword
+            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword1, f"Rank in '{keyword2}'": rank_keyword2})
+
+        # Display number of common URLs
+        st.write(f"**Number of Common URLs: {len(common_urls)}**")
+
+        # Create a DataFrame for exporting to CSV
+        df_common = pd.DataFrame(common_urls_data)
+
+        # Button to download the common data as CSV
+        st.download_button(
+            label="Download Common URLs CSV",
+            data=df_common.to_csv(index=False).encode('utf-8'),
+            file_name='common_urls.csv',
+            mime='text/csv',
+        )
+
+        # Display common URLs in a table
+        st.dataframe(df_common)
+
+    else:
+        st.error("Please enter both keywords.")
+
