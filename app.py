@@ -71,12 +71,12 @@ col1, col2 = st.columns(2)
 
 with col1:
     keyword1 = st.text_input("Entrer le Mot-clé 1 :", placeholder="Ex: marketing digital")
-    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt"])
+    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
     keyword2 = st.text_input("Entrer le Mot-clé 2 :", placeholder="Ex: SEO")
-    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt"])
+    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 st.markdown("---")  # Ligne de séparation
@@ -109,9 +109,11 @@ if st.button("Analyser"):
         st.markdown("---")  # Ligne de séparation
         st.subheader("Résultats des SERP")
         
-        # Affichage des liens de recherche
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword1}](https://www.google.com/search?q={keyword1})")
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword2}](https://www.google.com/search?q={keyword2})")
+        # Affichage des liens de recherche avec encodage
+        encoded_keyword1 = urllib.parse.quote(keyword1)
+        encoded_keyword2 = urllib.parse.quote(keyword2)
+        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
+        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
 
         # Affichage des résultats de SERP
         with st.expander(f"Détails SERP pour le mot-clé : {keyword1}"):
