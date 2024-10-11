@@ -3,11 +3,10 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 from collections import Counter
-import nltk
-from nltk.util import ngrams
+import spacy
 
-# Download NLTK data files (only needed once)
-nltk.download('punkt')
+# Charger le modèle de langue français pour spaCy
+nlp = spacy.load("fr_core_news_sm")
 
 # Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
@@ -118,9 +117,9 @@ def extract_content(url):
         return None, None, None
 
 def generate_ngrams(text, n):
-    """Generate n-grams from text."""
-    tokens = nltk.word_tokenize(text)
-    return list(ngrams(tokens, n))
+    """Generate n-grams from text using spaCy."""
+    doc = nlp(text)
+    return [tuple(doc[i:i+n].text for i in range(len(doc)-n+1))]
 
 def analyze_ngrams(common_urls, keyword1, keyword2, n):
     """Analyze n-grams from titles, headings, and content of common URLs."""
