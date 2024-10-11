@@ -144,18 +144,22 @@ if st.button("Analyze"):
         # Display SERP results
         with st.expander(f"Details for Keyword: {keyword1}"):
             st.write(f"**SERP for Keyword: {keyword1}**")
-            for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")
+            for rank, (url, title) in enumerate(results_keyword1, start=1):
+                st.markdown(f"- [{title}]({url}) (Rank: {rank})")
 
         with st.expander(f"Details for Keyword: {keyword2}"):
             st.write(f"**SERP for Keyword: {keyword2}**")
-            for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")
+            for rank, (url, title) in enumerate(results_keyword2, start=1):
+                st.markdown(f"- [{title}]({url}) (Rank: {rank})")
 
         st.markdown("---")
         st.subheader("Common URLs")
-        for url in common_urls:
-            st.write(url)
+        if common_urls:
+            for rank, url in enumerate(common_urls, start=1):
+                title = urls1[url] if url in urls1 else urls2[url]  # Get title from either SERP
+                st.write(f"- [{title}]({url}) (Rank: {rank})")
+        else:
+            st.info("No common URLs found.")
 
         # Display URLs unique to Keyword 1
         with st.expander(f"URLs unique to Keyword: {keyword1}"):
