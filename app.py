@@ -33,19 +33,35 @@ def scrape_serp(keyword, language, country):
 
 def analyze_titles(results, keyword1, keyword2):
     # Compter les occurrences des mots-clés dans les titres
-    count_keyword1 = 0
-    count_keyword2 = 0
-    count_both_keywords = 0
+    counts = {
+        "common_keyword1": 0,
+        "common_keyword2": 0,
+        "common_both": 0,
+        "non_common_keyword1": 0,
+        "non_common_keyword2": 0,
+    }
 
-    for _, title in results:
+    # Dictionnaires pour séparer les URLs communes et non communes
+    urls_common = {url: title for url, title in results[0]}  # SERP 1
+    urls_non_common = {url: title for url, title in results[1]}  # SERP 2
+
+    # Analyser les titres des URLs communes
+    for url, title in urls_common.items():
+        if keyword1.lower() in title.lower() and url in urls_non_common:
+            counts["common_both"] += 1
+        elif keyword1.lower() in title.lower():
+            counts["common_keyword1"] += 1
+        elif keyword2.lower() in title.lower():
+            counts["common_keyword2"] += 1
+
+    # Analyser les titres des URLs non communes
+    for url, title in urls_non_common.items():
         if keyword1.lower() in title.lower():
-            count_keyword1 += 1
-        if keyword2.lower() in title.lower():
-            count_keyword2 += 1
-        if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
-            count_both_keywords += 1
+            counts["non_common_keyword1"] += 1
+        elif keyword2.lower() in title.lower():
+            counts["non_common_keyword2"] += 1
 
-    return count_keyword1, count_keyword2, count_both_keywords
+    return counts
 
 def calculate_similarity(results1, results2):
     urls1 = {result[0]: result[1] for result in results1}
@@ -58,7 +74,7 @@ def calculate_similarity(results1, results2):
 
     similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
     
-    return common_urls, non_common_urls1, non_common_urls2, similarity_rate, urls1, urls2
+    return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
 st.title("Analyse de Similarité SERP")
@@ -83,16 +99,18 @@ if st.button("Analyser"):
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
-        common_urls, non_common_urls1, non_common_urls2, similarity_rate, urls1, urls2 = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, non_common_urls1, non_common_urls2, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
 
         # Analyser les titres
-        count_keyword1, count_keyword2, count_both_keywords = analyze_titles(results_keyword1 + results_keyword2, keyword1, keyword2)
+        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
         # Affichage des résultats
         st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
-        st.write(f"**Mot-clé 1 dans les titres : {count_keyword1} occurrences**")
-        st.write(f"**Mot-clé 2 dans les titres : {count_keyword2} occurrences**")
-        st.write(f"**Les deux mots-clés dans les titres : {count_both_keywords} occurrences**")
+        st.write(f"**URLs communes contenant uniquement le mot-clé 1 dans le titre : {counts['common_keyword1']}**")
+        st.write(f"**URLs communes contenant uniquement le mot-clé 2 dans le titre : {counts['common_keyword2']}**")
+        st.write(f"**URLs communes contenant les deux mots-clés dans le titre : {counts['common_both']}**")
+        st.write(f"**URLs non communes contenant uniquement le mot-clé 1 dans le titre : {counts['non_common_keyword1']}**")
+        st.write(f"**URLs non communes contenant uniquement le mot-clé 2 dans le titre : {counts['non_common_keyword2']}**")
 
         # Affichage des résultats de SERP
         with st.expander("Afficher SERP pour le Mot-clé 1"):
