@@ -44,8 +44,13 @@ def calculate_similarity(results1, results2):
 st.title("Analyse de Similarité SERP")
 
 # Entrée des mots-clés
-keyword1 = st.text_input("Mot-clé 1 :")
-keyword2 = st.text_input("Mot-clé 2 :")
+col1, col2 = st.columns(2)
+
+with col1:
+    keyword1 = st.text_input("Mot-clé 1 :")
+    
+with col2:
+    keyword2 = st.text_input("Mot-clé 2 :")
 
 # Sélection de la langue et du pays
 language = st.selectbox("Langue :", ["fr", "en", "es", "de", "it", "pt"])
@@ -53,32 +58,33 @@ country = st.selectbox("Pays :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt"
 
 if st.button("Analyser"):
     if keyword1 and keyword2:
-        st.write(f"**Résultats de l'analyse SERP**")
-        st.write(f"Mot-clé 1 : {keyword1}")
-        st.write(f"Mot-clé 2 : {keyword2}")
-        st.write(f"Langue/Pays : {language}/{country}")
-
         # Scraper les résultats pour les deux mots-clés
         results_keyword1 = scrape_serp(keyword1, language, country)
         results_keyword2 = scrape_serp(keyword2, language, country)
 
-        # Affichage des SERPs
-        st.write("**SERP pour le Mot-clé 1**")
-        for result in results_keyword1:
-            st.write(result)
-
-        st.write("**SERP pour le Mot-clé 2**")
-        for result in results_keyword2:
-            st.write(result)
-
         # Calculer la similarité
         common_urls, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
 
-        # Afficher les résultats de similarité
+        # Affichage des résultats de similarité
+        st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
         st.write("**URLs communes**")
         for url in common_urls:
             st.write(url)
-        
-        st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
+
+        # Création de colonnes pour afficher les SERPs
+        col3, col4 = st.columns(2)
+
+        with col3:
+            if st.button("Afficher SERP pour Mot-clé 1"):
+                st.write("**SERP pour le Mot-clé 1**")
+                for result in results_keyword1:
+                    st.write(result)
+
+        with col4:
+            if st.button("Afficher SERP pour Mot-clé 2"):
+                st.write("**SERP pour le Mot-clé 2**")
+                for result in results_keyword2:
+                    st.write(result)
+
     else:
         st.error("Veuillez entrer les deux mots-clés.")
