@@ -32,7 +32,7 @@ def scrape_serp(query, lang="en", country="us"):
         return []
 
 # Récupérer toutes les langues et tous les pays
-lang_options = {langcodes.get(i).language_name(): i for i in langcodes.LANGUAGES}
+lang_options = {langcodes.get(i).language_name(): i for i in langcodes.LANGUAGES.keys()}
 country_options = {country.name: country.alpha_2 for country in pycountry.countries}
 
 # Interface utilisateur en deux colonnes
@@ -44,7 +44,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.header("Mot-clé 1")
     keyword1 = st.text_input("Mot-clé 1", key="keyword1")
-    lang1 = st.selectbox("Langue pour le premier mot-clé", options=list(lang_options.keys()), key="lang1")
+    lang1 = st.selectbox("Langue pour le premier mot-clé", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"), key="lang1")
     
     # Préselectionner "France" dans les pays
     country1 = st.selectbox("Pays pour le premier mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country1")
@@ -53,7 +53,7 @@ with col1:
 with col2:
     st.header("Mot-clé 2")
     keyword2 = st.text_input("Mot-clé 2", key="keyword2")
-    lang2 = st.selectbox("Langue pour le deuxième mot-clé", options=list(lang_options.keys()), key="lang2")
+    lang2 = st.selectbox("Langue pour le deuxième mot-clé", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"), key="lang2")
     
     # Préselectionner "France" dans les pays
     country2 = st.selectbox("Pays pour le deuxième mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country2")
