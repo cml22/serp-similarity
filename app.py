@@ -3,75 +3,111 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-# Liste des User Agents incluant Chrome et d'autres navigateurs
+# Liste des User Agents pour faire un roulement
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
-    "Mozilla/5.0 (Linux; Android 7.0; HTC 10 Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.83 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 5.0; SAMSUNG SM-N900 Build/LRX21V) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/2.1 Chrome/34.0.1847.76 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 9; Pixel 3 XL Build/PQ3A.190801.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/72.0.3626.121 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1",
-    "Mozilla/5.0 (iPad; CPU OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12H321 Safari/600.1.4",
-    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 ]
 
-# Fonction pour obtenir les URLs SERP
-def get_serp_urls(query, language, country, user_agent):
+# Liste des langues et des pays
+langues_pays = {
+    "fr": "Français (France)",
+    "fr-ca": "Français (Canada)",
+    "fr-ma": "Français (Maroc)",
+    "fr-sn": "Français (Sénégal)",
+    "fr-tn": "Français (Tunisie)",
+    "en-gb": "Anglais (Royaume-Uni)",
+    "en-us": "Anglais (États-Unis)",
+    "en-ca": "Anglais (Canada)",
+    "en-ie": "Anglais (Irlande)",
+    "en-sg": "Anglais (Singapour)",
+    "en-au": "Anglais (Australie)",
+    "en-nz": "Anglais (Nouvelle-Zélande)",
+    "en-in": "Anglais (Inde)",
+    "en-pk": "Anglais (Pakistan)",
+    "en-hk": "Anglais (Hong Kong)",
+    "es-es": "Espagnol (Espagne)",
+    "es-mx": "Espagnol (Mexique)",
+    "es-ar": "Espagnol (Argentine)",
+    "es-co": "Espagnol (Colombie)",
+    "es-cl": "Espagnol (Chili)",
+    "es-pe": "Espagnol (Pérou)",
+    "de": "Allemand (Allemagne)",
+    "de-at": "Allemand (Autriche)",
+    "de-ch": "Allemand (Suisse)",
+    "it": "Italien (Italie)",
+    "it-ch": "Italien (Suisse)",
+    "nl": "Néerlandais (Pays-Bas)",
+    "nl-be": "Néerlandais (Belgique)",
+    "pt": "Portugais (Portugal)",
+    "pt-br": "Portugais (Brésil)",
+    "pl": "Polonais (Pologne)",
+    "ru": "Russe (Russie)",
+    "be": "Russe (Biélorussie)",
+    "zh-cn": "Chinois (Chine)",
+    "zh-hk": "Chinois (Hong Kong)",
+    "zh-tw": "Chinois (Taïwan)",
+    "ja": "Japonais (Japon)",
+    "ar-sa": "Arabe (Arabie Saoudite)",
+    "ar-ae": "Arabe (Émirats Arabes Unis)",
+    "tr": "Turc (Turquie)",
+    "ko": "Coréen (Corée du Sud)",
+    "hi": "Hindi (Inde)"
+}
+
+def fetch_serp(keyword, lang_country):
+    url = f"https://www.google.{lang_country}/search?q={keyword}"
     headers = {
-        "User-Agent": user_agent
+        "User-Agent": USER_AGENTS[hash(keyword) % len(USER_AGENTS)]
     }
-    url = f"https://www.google.{country}/search?q={query}&hl={language}"
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
-    results = soup.find_all('h3')  # Extraction des titres des résultats
-    urls = [result.find_parent('a')['href'] for result in results if result.find_parent('a')]
-    return urls
+    results = []
 
-# Fonction pour calculer le taux de similarité
-def calculate_similarity(urls1, urls2):
-    set1 = set(urls1)
-    set2 = set(urls2)
-    common_urls = set1.intersection(set2)
-    similarity = (len(common_urls) / ((len(set1) + len(set2)) / 2)) * 100 if (len(set1) + len(set2)) > 0 else 0
-    return round(similarity, 2), len(common_urls), list(common_urls)
+    for g in soup.find_all('div', class_='g'):
+        link = g.find('a')['href']
+        results.append(link)
+
+    return results
+
+def calculate_similarity(serp1, serp2):
+    common_urls = set(serp1) & set(serp2)
+    total_urls = set(serp1) | set(serp2)
+    similarity_rate = (len(common_urls) / len(total_urls)) * 100 if total_urls else 0
+    return similarity_rate, common_urls
 
 # Interface Streamlit
-st.title("Outil de Comparaison des SERP")
-st.sidebar.header("Options de recherche")
+st.title("Outil de Similarité SERP")
 
-# Saisie des mots-clés
-keyword1 = st.sidebar.text_input("Mot-clé 1")
-keyword2 = st.sidebar.text_input("Mot-clé 2")
+# Saisie des mots-clés et sélection des langues/pays
+keyword1 = st.text_input("Mot-clé 1")
+keyword2 = st.text_input("Mot-clé 2")
+lang_country = st.selectbox("Sélectionnez la langue/pays", list(langues_pays.keys()), format_func=lambda x: langues_pays[x])
 
-# Choix de la langue, du pays et du User Agent
-languages = ["fr", "en", "de", "es", "it"]
-countries = ["com", "fr", "de", "es", "co.uk"]
-
-selected_language = st.sidebar.selectbox("Langue", languages)
-selected_country = st.sidebar.selectbox("Pays", countries)
-selected_user_agent = st.sidebar.selectbox("User Agent", USER_AGENTS)
-
-if st.sidebar.button("Comparer les SERP"):
-    # Obtenir les URLs des SERP
-    urls1 = get_serp_urls(keyword1, selected_language, selected_country, selected_user_agent)
-    urls2 = get_serp_urls(keyword2, selected_language, selected_country, selected_user_agent)
-
-    # Calculer le taux de similarité
-    similarity, common_count, common_urls = calculate_similarity(urls1, urls2)
+if st.button("Analyser"):
+    serp1 = fetch_serp(keyword1, lang_country)
+    serp2 = fetch_serp(keyword2, lang_country)
+    
+    # Calcul du taux de similarité
+    similarity_rate, common_urls = calculate_similarity(serp1, serp2)
 
     # Affichage des résultats
-    st.subheader(f"Taux de similarité : {similarity}% (Nombre d'URLs communes : {common_count})")
-
-    # Accordéons pour afficher les SERP
-    with st.expander("Afficher SERP 1"):
-        st.write(urls1)
+    st.markdown(f"**Taux de similarité : {similarity_rate:.2f}% avec {len(common_urls)} URL(s) commune(s)**")
     
-    with st.expander("Afficher SERP 2"):
-        st.write(urls2)
-    
-    # Lister les URLs communes
-    st.subheader("URLs communes")
-    st.write(common_urls)
+    # Affichage des URLs communes
+    if common_urls:
+        st.subheader("URLs communes")
+        for url in common_urls:
+            st.markdown(f"- {url}")
 
+    # Affichage des SERPs dans des accordéons
+    with st.expander("SERP pour Mot-clé 1"):
+        for url in serp1:
+            st.markdown(f"- {url}")
+    
+    with st.expander("SERP pour Mot-clé 2"):
+        for url in serp2:
+            st.markdown(f"- {url}")
