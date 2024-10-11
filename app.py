@@ -45,7 +45,9 @@ with col1:
     st.header("Mot-clé 1")
     keyword1 = st.text_input("Mot-clé 1", key="keyword1")
     lang1 = st.selectbox("Langue pour le premier mot-clé", options=list(lang_options.keys()), key="lang1")
-    country1 = st.selectbox("Pays pour le premier mot-clé", options=list(country_options.keys()), key="country1")
+    
+    # Préselectionner "France" dans les pays
+    country1 = st.selectbox("Pays pour le premier mot-clé", options=list(country_options.keys()), index=list(country_options.keys()).index("France"), key="country1")
 
 # Colonne de droite pour le mot-clé 2
 with col2:
