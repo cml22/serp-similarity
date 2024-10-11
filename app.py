@@ -23,7 +23,7 @@ def scrape_serp(query, lang="en", region="us"):
         return []
 
 # Interface utilisateur Streamlit
-st.title("Analyse de SERP Similarity")
+st.title("Outil d'analyse de SERP")
 st.write("Entrez deux mots-clés pour analyser leur similarité dans les résultats de recherche.")
 
 # Options de langue et de pays
@@ -39,6 +39,7 @@ country1 = st.selectbox("Pays", options=list(country_options.keys()), index=list
 # Colonne de droite pour le deuxième mot-clé
 st.header("Mot-clé 2")
 keyword2 = st.text_input("Entrez le deuxième mot-clé")
+# Pré-sélection des valeurs pour le mot-clé 2
 lang2 = st.selectbox("Langue", options=list(lang_options.keys()), index=list(lang_options.keys()).index("French"))
 country2 = st.selectbox("Pays", options=list(country_options.keys()), index=list(country_options.keys()).index("France"))
 
