@@ -19,10 +19,15 @@ def scrape_serp(keyword, lang, country):
 st.title("Analyse de Similarité SERP")
 
 # Entrée des mots-clés sans pré-remplissage
-keyword1 = st.text_input("Entrez le mot-clé 1")  # Champ vide par défaut
-keyword2 = st.text_input("Entrez le mot-clé 2")  # Champ vide par défaut
-lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
-lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
+col1, col2 = st.columns(2)
+
+with col1:
+    keyword1 = st.text_input("Entrez le mot-clé 1", "")
+    lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
+
+with col2:
+    keyword2 = st.text_input("Entrez le mot-clé 2", "")
+    lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
 
 if st.button("Analyser"):
     # Scraping des SERPs
