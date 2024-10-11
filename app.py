@@ -89,4 +89,7 @@ if st.button("Analyser"):
         # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
-     
+            st.write(f"[{urls1[url]}]({url})")
+
+    else:
+        st.error("Veuillez entrer les deux mots-clés.")
