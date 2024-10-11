@@ -26,19 +26,22 @@ def scrape_serp(keyword, language, country):
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
         if link:
-            results.append(link['href'])
+            results.append((link['href'], link.get_text()))
 
     return results
 
 def calculate_similarity(results1, results2):
     # Calcul des URLs communes
-    common_urls = set(results1).intersection(set(results2))
-    total_urls = len(set(results1).union(set(results2)))
+    urls1 = {result[0]: result[1] for result in results1}
+    urls2 = {result[0]: result[1] for result in results2}
+
+    common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
+    total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     # Taux de similarité
     similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
     
-    return list(common_urls), similarity_rate, len(common_urls)
+    return list(common_urls), similarity_rate, len(common_urls), urls1, urls2
 
 # Interface utilisateur avec Streamlit
 st.title("Analyse de Similarité SERP")
@@ -63,7 +66,7 @@ if st.button("Analyser"):
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
-        common_urls, similarity_rate, common_count = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, similarity_rate, common_count, urls1, urls2 = calculate_similarity(results_keyword1, results_keyword2)
 
         # Affichage du taux de similarité avec le nombre d'URLs communes
         st.write(f"**Taux de similarité : {similarity_rate:.2f}% ({common_count} URLs communes)**")
@@ -71,18 +74,18 @@ if st.button("Analyser"):
         # Affichage des résultats de SERP sous forme d'accordéon
         with st.expander("Afficher SERP pour le Mot-clé 1"):
             st.write("**SERP pour le Mot-clé 1**")
-            for result in results_keyword1:
-                st.write(result)
+            for url, title in results_keyword1:
+                st.write(f"[{title}]({url})")
 
         with st.expander("Afficher SERP pour le Mot-clé 2"):
             st.write("**SERP pour le Mot-clé 2**")
-            for result in results_keyword2:
-                st.write(result)
+            for url, title in results_keyword2:
+                st.write(f"[{title}]({url})")
 
         # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
-            st.write(url)
+            st.write(f"[{urls1[url]}]({url})")
 
     else:
         st.error("Veuillez entrer les deux mots-clés.")
