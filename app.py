@@ -3,65 +3,80 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-def scrape_serp(query, lang="fr", region="fr"):
-    # Construction de l'URL de recherche
-    url = f"https://www.google.{region}/search?q={query}&hl={lang}"
+# Fonction pour scraper les résultats de recherche Google
+def scrape_serp(query, lang="en", region="us"):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
+    url = f"https://www.google.com/search?q={query}&hl={lang}&gl={region}"
     response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(response.text, 'html.parser')
+
     results = []
-
-    # Extraction des URLs des résultats de recherche
     for item in soup.find_all('h3'):
-        parent = item.find_parent("a")
-        if parent and 'href' in parent.attrs:
-            results.append(parent['href'])
+        parent = item.find_parent('a')
+        if parent:
+            results.append((item.get_text(), parent['href']))
+    
+    return results[:10]  # Limiter aux 10 premiers résultats
 
-    return results[:10]  # Retourne seulement les 10 premiers résultats
-
+# Titre de l'application
 st.title("Outil d'analyse de SERP")
 
-# Configuration pour le mot-clé 1
-st.header("Mot-clé 1")
-query1 = st.text_input("Entrez le mot-clé 1")
-lang1 = st.selectbox("Langue", options=["fr", "en"], index=0)
-region1 = st.selectbox("Pays", options=["fr", "us", "uk"], index=0)
+# Colonne pour le mot-clé 1
+col1, col2 = st.columns(2)
 
-# Configuration pour le mot-clé 2
-st.header("Mot-clé 2")
-query2 = st.text_input("Entrez le mot-clé 2")
-lang2 = st.selectbox("Langue", options=["fr", "en"], index=0)
-region2 = st.selectbox("Pays", options=["fr", "us", "uk"], index=0)
+with col1:
+    st.subheader("Mot-clé 1")
+    keyword1 = st.text_input("Entrez le mot-clé 1")
+    lang1 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"], index=0)
+    country1 = st.selectbox("Pays", options=["FR", "US", "GB", "DE", "IT"], index=0)
 
-# Bouton pour effectuer l'analyse
+# Colonne pour le mot-clé 2
+with col2:
+    st.subheader("Mot-clé 2")
+    keyword2 = st.text_input("Entrez le mot-clé 2")
+    lang2 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"], index=0)
+    country2 = st.selectbox("Pays", options=["FR", "US", "GB", "DE", "IT"], index=0)
+
+# Bouton pour lancer l'analyse
 if st.button("Analyser"):
-    if query1 and query2:
-        # Scraping des SERP
-        results1 = scrape_serp(query1, lang=lang1, region=region1)
-        results2 = scrape_serp(query2, lang=lang2, region=region2)
+    if keyword1 and keyword2:
+        # Scraper les résultats pour les deux mots-clés
+        results1 = scrape_serp(keyword1, lang1, country1)
+        results2 = scrape_serp(keyword2, lang2, country2)
 
-        # Calcul des URLs communes
-        set_results1 = set(results1)
-        set_results2 = set(results2)
-        common_urls = set_results1 & set_results2
-        total_urls = len(set_results1 | set_results2)
-        similarity_rate = (len(common_urls) / 10 * 100) if total_urls > 0 else 0  # Taux de similarité sur les top 10
+        # Extraire les URLs et les titres
+        urls1 = [result[1] for result in results1]
+        urls2 = [result[1] for result in results2]
 
-        # Affichage des résultats
-        st.subheader(f"Résultats pour '{query1}' (Top 10)")
-        st.write(pd.DataFrame(results1, columns=["URLs"]))
+        # Calculer le taux de similarité
+        common_urls = set(urls1) & set(urls2)
+        total_urls = len(set(urls1) | set(urls2))
+        similarity_rate = len(common_urls) / total_urls * 100 if total_urls > 0 else 0
 
-        st.subheader(f"Résultats pour '{query2}' (Top 10)")
-        st.write(pd.DataFrame(results2, columns=["URLs"]))
-
-        st.subheader("Taux d'URLs communes")
+        # Afficher les résultats
+        st.subheader("Résultats de l'analyse")
         st.write(f"Taux de similarité : {similarity_rate:.2f}%")
-        
-        # Affichage des URLs communes
-        if common_urls:
-            st.subheader("URLs communes")
-            st.write(pd.DataFrame(list(common_urls), columns=["URLs"]))
-        else:
-            st.write("Aucune URL co
+        st.write(f"URLs communes : {len(common_urls)}")
+        st.write(f"Domaines communs : {len(set(result.split('/')[2] for result in common_urls))}")
+        st.write(f"Nouvelles URLs : {len(set(urls2) - set(urls1))}")
+        st.write(f"URLs améliorées : {len(set(urls1) - set(urls2))}")
+        st.write(f"URLs déclinées : {len(set(urls1) - common_urls)}")
+        st.write(f"URLs perdues : {len(set(urls2) - common_urls)}")
+
+        # Afficher les URLs des résultats
+        st.subheader("Top 10 Mot-clé 1")
+        for title, url in results1:
+            st.write(f"[{title}]({url})")
+
+        st.subheader("Top 10 Mot-clé 2")
+        for title, url in results2:
+            st.write(f"[{title}]({url})")
+
+        st.subheader("URLs communes")
+        for url in common_urls:
+            st.write(f"[{url}]({url})")
+    else:
+        st.warning("Veuillez entrer les deux mots-clés.")
+
