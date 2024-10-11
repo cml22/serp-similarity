@@ -5,8 +5,8 @@ import urllib.parse
 from collections import Counter
 import spacy
 
-# Charger le modèle de langue français pour spaCy
-nlp = spacy.load("fr_core_news_sm")
+# Load the spaCy model (only needed once)
+nlp = spacy.load("en_core_web_sm")
 
 # Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
@@ -119,7 +119,8 @@ def extract_content(url):
 def generate_ngrams(text, n):
     """Generate n-grams from text using spaCy."""
     doc = nlp(text)
-    return [tuple(doc[i:i+n].text for i in range(len(doc)-n+1))]
+    ngrams_list = [tuple(doc[i:i+n].text for i in range(len(doc)-n+1)) for n in range(1, n+1)]
+    return [ng for ngram in ngrams_list for ng in ngram]
 
 def analyze_ngrams(common_urls, keyword1, keyword2, n):
     """Analyze n-grams from titles, headings, and content of common URLs."""
@@ -189,23 +190,28 @@ if st.button("Analyze"):
         elif is_keyword2:
             st.success(f"The most representative n-gram matches **Keyword 2: {keyword2}**.")
         else:
-            st.warning("The most representative n-gram does not match either keyword.")
+            st.warning("The most common n-gram does not match either keyword.")
 
-        st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
-        st.write(f"**Similarity Rate Domain: {similarity_rate_domain:.2f}%**")
-        
-        # Summary on keyword usage
-        if counts['common_both'] > 0:
-            st.write(f"**Common Titles with Both Keywords:** {counts['common_both']}")
-        st.write(f"**Titles with Keyword 1:** {counts['common_keyword1']}")
-        st.write(f"**Titles with Keyword 2:** {counts['common_keyword2']}")
+        # Display similarity rates
+        st.write(f"**Similarity Rate (URLs):** {similarity_rate_url:.2f}%")
+        st.write(f"**Similarity Rate (Domains):** {similarity_rate_domain:.2f}%")
 
         # Display common URLs
-        if common_urls:
-            st.write("**Common URLs:**")
-            for url in common_urls:
-                st.write(f"- {url}")
+        st.write("### Common URLs:")
+        for url in common_urls:
+            st.markdown(f"- [{url}]({url})")
+        
+        # Display counts
+        st.write("### Title Analysis:")
+        st.write(f"- Titles containing **Keyword 1**: {counts['common_keyword1']}")
+        st.write(f"- Titles containing **Keyword 2**: {counts['common_keyword2']}")
+        st.write(f"- Titles containing both keywords: {counts['common_both']}")
 
-        st.success("Analysis complete!")
+        # Additional output if needed
+        if counts['common_both'] > 0:
+            st.success("There are titles that match both keywords.")
+        else:
+            st.warning("No titles found that match both keywords.")
+
     else:
-        st.error("Please enter both keywords.")
+        st.warning("Please enter both keywords to analyze.")
