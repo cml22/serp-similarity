@@ -4,11 +4,8 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 def scrape_serp(keyword, language, country):
-    # Construction de l'URL de recherche
     query = urllib.parse.quote(keyword)
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
-
-    # En-têtes pour simuler un navigateur Chrome
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.96 Safari/537.36"
     }
@@ -17,34 +14,49 @@ def scrape_serp(keyword, language, country):
 
     if response.status_code != 200:
         st.error("Erreur lors de la récupération des résultats.")
-        return []
-    
+        return [], []
+
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Extraction des URLs des résultats de recherche
     results = []
+    titles = []
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
-        if link:
+        title = g.find('h3')
+        if link and title:
             results.append(link['href'])  # Stocke seulement l'URL
+            titles.append(title.get_text())  # Stocke le title
 
-    return url, results  # Retourne également l'URL de recherche
+    return results, titles  # Retourne seulement les résultats et les titles
 
-def calculate_similarity(results1, results2):
-    # Calcul des URLs communes et uniques
+def calculate_keyword_presence(titles, keyword1, keyword2):
+    presence_count = sum(1 for title in titles if keyword1.lower() in title.lower() and keyword2.lower() in title.lower())
+    return presence_count
+
+def calculate_similarity(results1, results2, titles1, titles2, keyword1, keyword2):
     urls1 = set(results1)
     urls2 = set(results2)
 
     common_urls = urls1.intersection(urls2)
     unique_urls1 = urls1 - urls2
     unique_urls2 = urls2 - urls1
-    
+
     total_urls = len(urls1.union(urls2))
 
-    # Taux de similarité
-    similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return list(common_urls), similarity_rate, len(common_urls), list(unique_urls1), list(unique_urls2)
+    # Calculer les taux
+    common_count = len(common_urls)
+    non_common_count = len(urls1) + len(urls2) - common_count
+
+    common_keyword_presence = calculate_keyword_presence([titles1[results1.index(url)] for url in common_urls], keyword1, keyword2)
+    non_common_keyword_presence = (
+        calculate_keyword_presence([titles1[results1.index(url)] for url in unique_urls1], keyword1, keyword2) +
+        calculate_keyword_presence([titles2[results2.index(url)] for url in unique_urls2], keyword1, keyword2)
+    )
+
+    common_percentage = (common_keyword_presence / common_count * 100) if common_count > 0 else 0
+    non_common_percentage = (non_common_keyword_presence / non_common_count * 100) if non_common_count > 0 else 0
+
+    return list(common_urls), common_percentage, list(unique_urls1), list(unique_urls2), non_common_percentage
 
 # Interface utilisateur avec Streamlit
 st.title("Analyse de Similarité SERP")
@@ -65,43 +77,42 @@ with col2:
 if st.button("Analyser"):
     if keyword1 and keyword2:
         # Scraper les résultats pour les deux mots-clés
-        url1, results_keyword1 = scrape_serp(keyword1, language1, country1)
-        url2, results_keyword2 = scrape_serp(keyword2, language2, country2)
+        results_keyword1, titles_keyword1 = scrape_serp(keyword1, language1, country1)
+        results_keyword2, titles_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
-        common_urls, similarity_rate, common_count, unique_urls1, unique_urls2 = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, common_percentage, unique_urls1, unique_urls2, non_common_percentage = calculate_similarity(
+            results_keyword1, results_keyword2, titles_keyword1, titles_keyword2, keyword1, keyword2
+        )
 
-        # Affichage du taux de similarité avec le nombre d'URLs communes
-        st.write(f"**Taux de similarité : {similarity_rate:.2f}% ({common_count} URLs communes)**")
-
-        # Affichage des URLs de recherche
-        st.write(f"**URL de recherche pour le Mot-clé 1 :** [{url1}]({url1})")
-        st.write(f"**URL de recherche pour le Mot-clé 2 :** [{url2}]({url2})")
+        # Affichage des résultats
+        st.write(f"**Taux d'URLs communes contenant les deux mots-clés : {common_percentage:.2f}%**")
+        st.write(f"**Taux d'URLs non communes contenant les deux mots-clés : {non_common_percentage:.2f}%**")
 
         # Affichage des résultats de SERP sous forme d'accordéon
         with st.expander("Afficher SERP pour le Mot-clé 1"):
             st.write("**SERP pour le Mot-clé 1**")
             for url in results_keyword1:
-                st.write(url)  # Afficher seulement les URLs
+                st.write(url)
 
         with st.expander("Afficher SERP pour le Mot-clé 2"):
             st.write("**SERP pour le Mot-clé 2**")
             for url in results_keyword2:
-                st.write(url)  # Afficher seulement les URLs
+                st.write(url)
 
         # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
-            st.write(url)  # Afficher seulement les URLs
+            st.write(url)
 
         # Affichage des URLs uniques pour chaque mot-clé
         with st.expander("URLs uniquement présentes pour le Mot-clé 1"):
             for url in unique_urls1:
-                st.write(url)  # Afficher seulement les URLs uniques
+                st.write(url)
 
         with st.expander("URLs uniquement présentes pour le Mot-clé 2"):
             for url in unique_urls2:
-                st.write(url)  # Afficher seulement les URLs uniques
+                st.write(url)
 
     else:
         st.error("Veuillez entrer les deux mots-clés.")
