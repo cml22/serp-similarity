@@ -130,10 +130,9 @@ if st.button("Analyze"):
         else:
             st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
 
-st.markdown("---")  # Cette ligne doit être alignée avec le début de la condition
-st.subheader("SERP Results")  # Idem ici
+        st.markdown("---")  # Cette ligne doit être alignée avec le début de la condition
+        st.subheader("SERP Results")  # Idem ici
 
-        
         # Display search links with encoded keywords and the correct language/country
         encoded_keyword1 = urllib.parse.quote(keyword1)
         encoded_keyword2 = urllib.parse.quote(keyword2)
@@ -165,73 +164,4 @@ st.subheader("SERP Results")  # Idem ici
         for url in common_urls:
             rank_keyword1 = next((i + 1 for i, (u, _) in enumerate(results_keyword1) if u == url), "Not Found")
             rank_keyword2 = next((i + 1 for i, (u, _) in enumerate(results_keyword2) if u == url), "Not Found")
-            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword1, f"Rank in '{keyword2}'": rank_keyword2})
-
-        # Display number of common URLs
-        st.write(f"**Number of Common URLs: {len(common_urls)}**")
-
-        # Create a DataFrame for exporting to CSV
-        df_common = pd.DataFrame(common_urls_data)
-
-        # Button to download the common data as CSV
-        st.download_button(
-            label="Download Common URLs CSV",
-            data=df_common.to_csv(index=False).encode('utf-8'),
-            file_name='common_urls.csv',
-            mime='text/csv',
-        )
-
-        # Display common URLs in a table
-        st.dataframe(df_common)
-
-        st.markdown("---")
-        st.subheader("Unique URLs in Each SERP")
-
-        # Unique URLs
-        unique_urls_keyword1 = set(urls1.keys()) - set(urls2.keys())
-        unique_urls_keyword2 = set(urls2.keys()) - set(urls1.keys())
-
-        # Prepare data for unique URLs
-        unique_urls_data1 = [{"URL": url, "Title": urls1[url]} for url in unique_urls_keyword1]
-        unique_urls_data2 = [{"URL": url, "Title": urls2[url]} for url in unique_urls_keyword2]
-
-        # Create DataFrames for exporting to CSV
-        df_unique1 = pd.DataFrame(unique_urls_data1)
-        df_unique2 = pd.DataFrame(unique_urls_data2)
-
-        # Button to download unique URLs as CSV
-        st.download_button(
-            label="Download Unique URLs for Keyword 1 CSV",
-            data=df_unique1.to_csv(index=False).encode('utf-8'),
-            file_name='unique_urls_keyword1.csv',
-            mime='text/csv',
-        )
-
-        st.download_button(
-            label="Download Unique URLs for Keyword 2 CSV",
-            data=df_unique2.to_csv(index=False).encode('utf-8'),
-            file_name='unique_urls_keyword2.csv',
-            mime='text/csv',
-        )
-
-        # Display unique URLs in accordions
-        with st.expander(f"Unique URLs for Keyword: {keyword1}"):
-            if unique_urls_data1:
-                st.write(f"**Unique URLs for Keyword: {keyword1}**")
-                for entry in unique_urls_data1:
-                    st.markdown(f"- [{entry['Title']}]({entry['URL']})")
-            else:
-                st.write("No unique URLs found.")
-
-        with st.expander(f"Unique URLs for Keyword: {keyword2}"):
-            if unique_urls_data2:
-                st.write(f"**Unique URLs for Keyword: {keyword2}**")
-                for entry in unique_urls_data2:
-                    st.markdown(f"- [{entry['Title']}]({entry['URL']})")
-            else:
-                st.write("No unique URLs found.")
-
-        st.markdown("---")
-
-# Include any necessary footer or additional information
-st.write("Thank you for using the SERP Similarity Analysis Tool! If you have any feedback or suggestions, feel free to contact us.")
+            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword
