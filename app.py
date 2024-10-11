@@ -78,6 +78,10 @@ st.write("2. Choose the appropriate language and country for each keyword.")
 st.write("3. Click on the 'Analyze' button to view the results.")
 st.write("4. The tool will display the similarity rate, common URLs, unique URLs for each keyword, and title analysis.")
 
+# Disclaimer
+st.markdown("### Disclaimer")
+st.write("Please note that the title tag alone is not sufficient for effective SEO. Other factors such as content quality, backlinks, and site performance also play crucial roles in search engine rankings.")
+
 # Input for keywords
 col1, col2 = st.columns(2)
 
