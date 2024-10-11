@@ -8,145 +8,116 @@ def scrape_serp(keyword, language, country):
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.96 Safari/537.36"
     }
 
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        st.error("Error while fetching the results.")
+        st.error("Error retrieving results.")
         return []
-
+    
     soup = BeautifulSoup(response.text, 'html.parser')
 
     results = []
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
         if link:
-            title = g.find('h3').get_text() if g.find('h3') else "Title not found"
-            results.append((link['href'], title))
+            results.append((link['href'], link.get_text()))
 
     return results
-
-def analyze_titles(results, keyword1, keyword2):
-    counts = {
-        "common_keyword1": 0,
-        "common_keyword2": 0,
-        "common_both": 0,
-    }
-
-    urls_common = {url: title for url, title in results[0]}  # SERP 1
-    urls_non_common = {url: title for url, title in results[1]}  # SERP 2
-
-    for url, title in urls_common.items():
-        if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
-            counts["common_both"] += 1
-        elif keyword1.lower() in title.lower():
-            counts["common_keyword1"] += 1
-        elif keyword2.lower() in title.lower():
-            counts["common_keyword2"] += 1
-
-    return counts
 
 def calculate_similarity(results1, results2):
     urls1 = {result[0]: result[1] for result in results1}
     urls2 = {result[0]: result[1] for result in results2}
 
     common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
-    non_common_urls1 = set(urls1.keys()) - common_urls
-    non_common_urls2 = set(urls2.keys()) - common_urls
     total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
-# User interface with Streamlit
-st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
-st.title("SERP Similarity Analysis")
-st.markdown("---")  # Separator line
+    return list(common_urls), similarity_rate, len(common_urls), urls1, urls2
 
-# Tool purpose
-st.markdown("### Purpose of this Tool")
-st.write("This tool helps you analyze the similarity between two keywords based on their search engine results pages (SERPs). "
-         "You can see which URLs are common, unique to each keyword, and how often each keyword appears in the titles.")
+def analyze_titles(results1, results2, keyword1, keyword2):
+    titles1 = [result[1] for result in results1]
+    titles2 = [result[1] for result in results2]
 
-# Documentation
-st.markdown("### Documentation")
-st.write("1. Enter two keywords you want to compare.")
-st.write("2. Choose the appropriate language and country for each keyword.")
-st.write("3. Click on the 'Analyze' button to view the results.")
-st.write("4. The tool will display the similarity rate, common URLs, unique URLs for each keyword, and title analysis.")
+    count_keyword1 = sum(keyword1.lower() in title.lower() for title in titles1)
+    count_keyword2 = sum(keyword2.lower() in title.lower() for title in titles1)
+    count_both_keywords = sum(keyword1.lower() in title.lower() and keyword2.lower() in title.lower() for title in titles1)
 
-# Disclaimer
-st.markdown("### Disclaimer")
-st.write("Please note that the title tag alone is not sufficient for effective SEO. Other factors such as content quality, backlinks, and site performance also play crucial roles in search engine rankings.")
+    return count_keyword1, count_keyword2, count_both_keywords
 
-# Input for keywords
+st.title("SERP Similarity Analysis Tool")
+
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
+    keyword1 = st.text_input("Keyword 1:")
     language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country1 = st.selectbox("Country (Keyword 1):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
-    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
+    keyword2 = st.text_input("Keyword 2:")
     language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country2 = st.selectbox("Country (Keyword 2):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
-st.markdown("---")  # Separator line
-
 if st.button("Analyze"):
     if keyword1 and keyword2:
-        # Scrape results for both keywords
         results_keyword1 = scrape_serp(keyword1, language1, country1)
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
-        # Calculate similarity
-        common_urls, non_common_urls1, non_common_urls2, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
-
-        # Analyze titles
-        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
+        common_urls, similarity_rate, common_count, urls1, urls2 = calculate_similarity(results_keyword1, results_keyword2)
+        
+        # Title Analysis
+        count_keyword1, count_keyword2, count_both_keywords = analyze_titles(results_keyword1, results_keyword2, keyword1, keyword2)
 
         # Display results
-        st.subheader("Results")
-        st.write(f"Similarity Rate: {similarity_rate:.2f}% ({len(common_urls)} common URLs)")
-
+        st.write(f"**Similarity Rate: {similarity_rate:.2f}% ({common_count} common URLs)**")
+        
         # Title recommendation
-        if counts['common_both'] > 0:
-            st.write("### Recommendation")
-            st.write(f"It seems that using both **{keyword1}** and **{keyword2}** in the title is beneficial, as they appear together in the titles of common URLs.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.write("### Recommendation")
-            st.write(f"To improve your chances of ranking well, consider using **{keyword1}** in your title.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.write("### Recommendation")
-            st.write(f"To improve your chances of ranking well, consider using **{keyword2}** in your title.")
-        else:
-            st.write("### Recommendation")
-            st.write("Consider testing both keywords separately in your title for better optimization.")
+        st.write(f"**Recommendation for Title:** To increase your chances of being a common URL, consider using **both keywords** in your title, if possible.")
+        
+        # Display SERP links
+        st.write(f"**Search URL for Keyword 1:** [View SERP for {keyword1}](https://www.google.com/search?q={urllib.parse.quote(keyword1)})")
+        st.write(f"**Search URL for Keyword 2:** [View SERP for {keyword2}](https://www.google.com/search?q={urllib.parse.quote(keyword2)})")
 
-        st.markdown("### Common URLs")
+        # SERP Results
+        with st.expander(f"View SERP for Keyword 1: {keyword1}"):
+            for url, title in results_keyword1:
+                st.write(f"[{title}]({url})")
+
+        with st.expander(f"View SERP for Keyword 2: {keyword2}"):
+            for url, title in results_keyword2:
+                st.write(f"[{title}]({url})")
+
+        # Common URLs
+        st.write("**Common URLs**")
         for url in common_urls:
             st.write(url)
 
-        st.markdown("### URLs only in Keyword 1")
-        for url in non_common_urls1:
-            st.write(url)
+        # Unique URLs
+        unique_urls_keyword1 = set(urls1.keys()) - set(urls2.keys())
+        unique_urls_keyword2 = set(urls2.keys()) - set(urls1.keys())
 
-        st.markdown("### URLs only in Keyword 2")
-        for url in non_common_urls2:
-            st.write(url)
+        with st.expander(f"URLs only present for Keyword 1: {keyword1}"):
+            for url in unique_urls_keyword1:
+                st.write(url)
 
-        st.markdown("---")  # Separator line
+        with st.expander(f"URLs only present for Keyword 2: {keyword2}"):
+            for url in unique_urls_keyword2:
+                st.write(url)
 
-        # Display title analysis
-        st.subheader("Title Analysis")
-        st.write(f"{keyword1} in titles: {counts['common_keyword1']} occurrences")
-        st.write(f"{keyword2} in titles: {counts['common_keyword2']} occurrences")
-        st.write(f"Both keywords in titles: {counts['common_both']} occurrences")
+        # Title occurrences
+        st.write(f"{keyword1} in titles: {count_keyword1} occurrences")
+        st.write(f"{keyword2} in titles: {count_keyword2} occurrences")
+        st.write(f"Both keywords in titles: {count_both_keywords} occurrences")
 
-# Backlink to Charles Migaud
-st.markdown("---")  # Separator line
-st.markdown("Tool made with love by [Charles Migaud](https://charles-migaud.fr/)")
+        # Disclaimer
+        st.write("**Disclaimer:** This tool provides an analysis of SERP similarity and title occurrences. However, having keywords in your title alone is not a sufficient element for ranking. Consider other SEO factors as well.")
+
+        # Backlink
+        st.write("Tool made with love by [Charles Migaud](https://charles-migaud.fr/)")
+
+    else:
+        st.error("Please enter both keywords.")
