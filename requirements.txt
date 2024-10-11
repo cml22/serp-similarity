@@ -1,7 +1,5 @@
-streamlit
-requests
 beautifulsoup4
 pandas
-matplotlib
-plotly
-scikit-learn
+requests
+pycountry
+langcodes
