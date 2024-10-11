@@ -66,6 +66,18 @@ st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
 st.title("SERP Similarity Analysis")
 st.markdown("---")  # Separator line
 
+# Tool purpose
+st.markdown("### Purpose of this Tool")
+st.write("This tool helps you analyze the similarity between two keywords based on their search engine results pages (SERPs). "
+         "You can see which URLs are common, unique to each keyword, and how often each keyword appears in the titles.")
+
+# Documentation
+st.markdown("### Documentation")
+st.write("1. Enter two keywords you want to compare.")
+st.write("2. Choose the appropriate language and country for each keyword.")
+st.write("3. Click on the 'Analyze' button to view the results.")
+st.write("4. The tool will display the similarity rate, common URLs, unique URLs for each keyword, and title analysis.")
+
 # Input for keywords
 col1, col2 = st.columns(2)
 
@@ -113,11 +125,10 @@ if st.button("Analyze"):
 
         # Display title analysis
         st.subheader("Title Analysis")
-        st.write(f"Keyword 1 in titles: {counts['common_keyword1']} occurrences")
-        st.write(f"Keyword 2 in titles: {counts['common_keyword2']} occurrences")
+        st.write(f"{keyword1} in titles: {counts['common_keyword1']} occurrences")
+        st.write(f"{keyword2} in titles: {counts['common_keyword2']} occurrences")
         st.write(f"Both keywords in titles: {counts['common_both']} occurrences")
 
 # Backlink to Charles Migaud
 st.markdown("---")  # Separator line
-st.markdown("[Charles Migaud](https://charles-migaud.fr/)")
-
+st.markdown("Tool made with love by [Charles Migaud](https://charles-migaud.fr/)")
