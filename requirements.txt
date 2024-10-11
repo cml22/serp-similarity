@@ -1,6 +1,7 @@
-streamlit
-requests
-beautifulsoup4
-pandas
-pycountry
-matplotlib
+streamlit==1.20.0
+beautifulsoup4==4.11.1
+requests==2.28.1
+pandas==1.4.3
+matplotlib==3.5.2
+langcodes==3.3.0
+pycountry==22.3.5
