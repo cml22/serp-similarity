@@ -88,12 +88,12 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
+    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: vps")
     language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country1 = st.selectbox("Country (Keyword 1):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
 
 with col2:
-    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
+    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: virtual private server")
     language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
     country2 = st.selectbox("Country (Keyword 2):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
 
@@ -118,15 +118,15 @@ if st.button("Analyze"):
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
 
         if counts['common_both'] > 0:
-            st.success("Les deux mots-clés semblent contribuer à être une URL commune dans le titre.")
+            st.success("The two keywords seem to contribute to a common URL in the title.")
         elif keyword1 in keyword2:
-            st.warning(f"**{keyword2}** est plus spécifique que **{keyword1}**. Considérez d'utiliser le mot-clé plus spécifique pour mieux cibler votre audience.")
+            st.warning(f"**{keyword2}** is more specific than **{keyword1}**. Consider using the more specific keyword to better target your audience.")
         elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"Il serait préférable d'inclure **{keyword1}** dans votre titre pour optimiser votre classement.")
+            st.warning(f"It is better to include **{keyword1}** in your title to optimise your ranking.")
         elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"Il serait préférable d'inclure **{keyword2}** dans votre titre pour optimiser votre classement.")
+            st.warning(f"It's better to include **{keyword2}** in your title to optimise your ranking.")
         else:
-            st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
+            st.info("None of the keywords seem to be effective on their own. Consider other optimisations.")
 
         st.markdown("---")
         st.subheader("SERP Results")
