@@ -1,88 +1,29 @@
-import streamlit as st
-import requests
-from bs4 import BeautifulSoup
-import urllib.parse
-
-def scrape_serp(keyword, language, country):
-    # Construction de l'URL de recherche
-    query = urllib.parse.quote(keyword)
-    url = f"https://www.google.{country}/search?q={query}&hl={language}"
-
-    # En-têtes pour simuler un navigateur Chrome
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.96 Safari/537.36"
-    }
-
-    response = requests.get(url, headers=headers)
-
-    if response.status_code != 200:
-        st.error("Erreur lors de la récupération des résultats.")
-        return []
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Extraction des URLs des résultats de recherche
-    results = []
-    for g in soup.find_all('div', class_='g'):
-        link = g.find('a', href=True)
-        if link:
-            results.append(link['href'])
-
-    return results
-
-def calculate_similarity(results1, results2):
-    # Calcul des URLs communes
-    common_urls = set(results1).intersection(set(results2))
-    total_urls = len(set(results1).union(set(results2)))
-
-    # Taux de similarité
-    similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return list(common_urls), similarity_rate, len(common_urls)
-
-# Interface utilisateur avec Streamlit
-st.title("Analyse de Similarité SERP")
-
-# Entrée des mots-clés
-col1, col2 = st.columns(2)
-
-with col1:
-    keyword1 = st.text_input("Mot-clé 1 :")
-    
-with col2:
-    keyword2 = st.text_input("Mot-clé 2 :")
-
-# Sélection de la langue et du pays
-language = st.selectbox("Langue :", ["fr", "en", "es", "de", "it", "pt"])
-country = st.selectbox("Pays :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt"])
-
-if st.button("Analyser"):
-    if keyword1 and keyword2:
-        # Scraper les résultats pour les deux mots-clés
-        results_keyword1 = scrape_serp(keyword1, language, country)
-        results_keyword2 = scrape_serp(keyword2, language, country)
-
-        # Calculer la similarité
-        common_urls, similarity_rate, common_count = calculate_similarity(results_keyword1, results_keyword2)
-
-        # Affichage du taux de similarité avec le nombre d'URLs communes
-        st.write(f"**Taux de similarité : {similarity_rate:.2f}% ({common_count} URLs communes)**")
-
-        # Affichage des résultats de SERP sous forme d'accordéon
-        with st.expander("Afficher SERP pour le Mot-clé 1"):
-            st.write("**SERP pour le Mot-clé 1**")
-            for result in results_keyword1:
-                st.write(result)
-
-        with st.expander("Afficher SERP pour le Mot-clé 2"):
-            st.write("**SERP pour le Mot-clé 2**")
-            for result in results_keyword2:
-                st.write(result)
-
-        # Affichage des URLs communes
-        st.write("**URLs communes**")
-        for url in common_urls:
-            st.write(url)
-
-    else:
-        st.error("Veuillez entrer les deux mots-clés.")
+    # User Agents supplémentaires
+    "Lynx/2.8.8pre.4 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.12.23",
+    "Wget/1.15 (linux-gnu)",
+    "Curl/7.35.0",
+    "Mozilla/5.0 (Linux; Android 7.0; HTC 10 Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.83 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; U; Android-4.0.3; en-us; Galaxy Nexus Build/IML74K) AppleWebKit/535.7 (KHTML, like Gecko) CrMo/16.0.912.75 Mobile Safari/535.7",
+    "Mozilla/5.0 (Linux; Android 6.0.1; SAMSUNG SM-N910F Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/44.0.2403.133 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 5.0; SAMSUNG SM-N900 Build/LRX21V) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/2.1 Chrome/34.0.1847.76 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 6.0.1; SAMSUNG SM-G570Y Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/44.0.2403.133 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1",
+    "Mozilla/5.0 (iPad; CPU OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12H321 Safari/600.1.4",
+    "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; AS; rv:11.0) like Gecko",
+    "Mozilla/5.0 (Windows NT 6.1; Trident/6.0; AS; rv:6.0) like Gecko",
+    "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)",
+    "Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 6.0; en-US)",
+    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+]
