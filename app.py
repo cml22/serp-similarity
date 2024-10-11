@@ -3,7 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import pycountry
-import langcodes
 
 # Fonction pour scraper les SERPs
 def scrape_serp(query, lang="fr", region="FR"):
@@ -53,7 +52,31 @@ def analyze_serps(results1, results2):
     }
 
 # Obtenir toutes les langues et pays disponibles
-lang_options = {langcodes.get(i).language_name(): i for i in langcodes.LANGUAGES.keys()}
+lang_options = {
+    'Afar': 'aa', 'Abkhazian': 'ab', 'Afrikaans': 'af', 'Albanian': 'sq', 'Amharic': 'am',
+    'Arabic': 'ar', 'Armenian': 'hy', 'Assamese': 'as', 'Azerbaijani': 'az', 'Bashkir': 'ba',
+    'Basque': 'eu', 'Belarusian': 'be', 'Bengali': 'bn', 'Bosnian': 'bs', 'Bulgarian': 'bg',
+    'Catalan': 'ca', 'Chinese (Simplified)': 'zh-CN', 'Chinese (Traditional)': 'zh-TW',
+    'Corsican': 'co', 'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da', 'Dutch': 'nl',
+    'English': 'en', 'Esperanto': 'eo', 'Estonian': 'et', 'Faroese': 'fo', 'Fijian': 'fj',
+    'Finnish': 'fi', 'French': 'fr', 'Galician': 'gl', 'Georgian': 'ka', 'German': 'de',
+    'Greek': 'el', 'Guarani': 'gn', 'Gujarati': 'gu', 'Haitian Creole': 'ht', 'Hausa': 'ha',
+    'Hebrew': 'iw', 'Hindi': 'hi', 'Hungarian': 'hu', 'Icelandic': 'is', 'Igbo': 'ig',
+    'Indonesian': 'id', 'Irish': 'ga', 'Italian': 'it', 'Japanese': 'ja', 'Javanese': 'jv',
+    'Kazakh': 'kk', 'Khmer': 'km', 'Kinyarwanda': 'rw', 'Korean': 'ko', 'Kurdish (Kurmanji)': 'ku',
+    'Kyrgyz': 'ky', 'Lao': 'lo', 'Latvian': 'lv', 'Lithuanian': 'lt', 'Luxembourgish': 'lb',
+    'Macedonian': 'mk', 'Malagasy': 'mg', 'Malay': 'ms', 'Malayalam': 'ml', 'Maltese': 'mt',
+    'Maori': 'mi', 'Marathi': 'mr', 'Mongolian': 'mn', 'Nepali': 'ne', 'Norwegian': 'no',
+    'Pashto': 'ps', 'Persian': 'fa', 'Polish': 'pl', 'Portuguese': 'pt', 'Punjabi': 'pa',
+    'Romanian': 'ro', 'Russian': 'ru', 'Samoan': 'sm', 'Scots Gaelic': 'gd', 'Serbian': 'sr',
+    'Sesotho': 'st', 'Shona': 'sn', 'Sindhi': 'sd', 'Sinhala': 'si', 'Slovak': 'sk',
+    'Slovenian': 'sl', 'Somali': 'so', 'Spanish': 'es', 'Sundanese': 'su', 'Swahili': 'sw',
+    'Swedish': 'sv', 'Tajik': 'tg', 'Tamil': 'ta', 'Tatar': 'tt', 'Telugu': 'te',
+    'Thai': 'th', 'Turkish': 'tr', 'Ukrainian': 'uk', 'Urdu': 'ur', 'Uzbek': 'uz',
+    'Vietnamese': 'vi', 'Welsh': 'cy', 'Xhosa': 'xh', 'Yiddish': 'yi', 'Yoruba': 'yo',
+    'Zulu': 'zu'
+}
+
 country_options = {country.name: country.alpha_2 for country in pycountry.countries}
 
 # Pré-sélectionner "fr" pour le pays du premier mot-clé
