@@ -2,89 +2,62 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-from sklearn.metrics.pairwise import cosine_similarity
 
-# Fonction pour scraper les résultats SERP
-def scrape_serp(query, lang, location):
+# Fonction pour scraper les SERP en fonction de la langue et la localisation
+def scrape_serp(query, lang="en", country="us"):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
-    url = f"https://www.google.com/search?q={query}&hl={lang}&gl={location}&num=100"
-    res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, "html.parser")
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+    url = f"https://www.google.com/search?q={query}&hl={lang}&gl={country}&num=100"
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
     
     results = []
-    for g in soup.find_all('div', class_='BNeawe vvjwJb AP7Wnd'):
-        results.append(g.text)
-
+    for g in soup.find_all('div', class_='g'):
+        link = g.find('a')['href']
+        results.append(link)
     return results
 
-# Fonction pour comparer les SERPs
-def compare_serps(serp1, serp2):
-    common_urls = set(serp1) & set(serp2)
-    common_domains = set([url.split('/')[2] for url in serp1]) & set([url.split('/')[2] for url in serp2])
-    
-    # Calcul des metrics (nouvelles, améliorées, perdues)
-    improved = set(serp2) - set(serp1)
-    lost = set(serp1) - set(serp2)
-    new_urls = improved
-    declined_urls = lost
-    
-    return {
-        'common_urls': len(common_urls),
-        'common_domains': len(common_domains),
-        'new': len(new_urls),
-        'improved': len(improved),
-        'lost': len(lost),
-        'declined': len(declined_urls)
-    }
+# Interface utilisateur avec des clés uniques pour éviter les erreurs
+st.title("SERP Similarity Analysis")
 
-# Fonction pour visualiser avec des flèches
-def plot_evolution(serp1, serp2):
-    fig = go.Figure()
-    
-    for i, url in enumerate(serp1[:10]):
-        if url in serp2[:10]:
-            j = serp2.index(url)
-            fig.add_trace(go.Scatter(x=[0, 1], y=[i, j], mode='lines', line=dict(color='green', width=2), name=url))
+# Input des mots-clés
+keyword1 = st.text_input("Mot-clé 1", key="keyword1")
+keyword2 = st.text_input("Mot-clé 2", key="keyword2")
 
-    fig.update_layout(
-        title='SERP Evolution (Top 10)',
-        xaxis_title="SERP 1",
-        yaxis_title="SERP 2",
-        showlegend=False
-    )
-    return fig
+# Sélection des options de langue et de localisation
+lang1 = st.selectbox("Langue pour le premier mot-clé", options=["fr", "en", "es", "de", "it"], key="lang1")
+country1 = st.selectbox("Pays pour le premier mot-clé", options=["us", "fr", "es", "de", "it"], key="country1")
 
-# Interface Streamlit
-st.title("SERP Similarity Tool")
+lang2 = st.selectbox("Langue pour le deuxième mot-clé", options=["fr", "en", "es", "de", "it"], key="lang2")
+country2 = st.selectbox("Pays pour le deuxième mot-clé", options=["us", "fr", "es", "de", "it"], key="country2")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    keyword1 = st.text_input("Mot-clé 1")
-    lang1 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"])
-    location1 = st.text_input("Location", value="FR")
+# Validation de la saisie
+if keyword1 and keyword2:
+    st.write(f"Scraping des résultats pour '{keyword1}' en {lang1}-{country1}...")
+    results1 = scrape_serp(keyword1, lang=lang1, country=country1)
     
-with col2:
-    keyword2 = st.text_input("Mot-clé 2")
-    lang2 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"])
-    location2 = st.text_input("Location", value="FR")
-
-if st.button("Analyser"):
-    serp1 = scrape_serp(keyword1, lang1, location1)
-    serp2 = scrape_serp(keyword2, lang2, location2)
+    st.write(f"Scraping des résultats pour '{keyword2}' en {lang2}-{country2}...")
+    results2 = scrape_serp(keyword2, lang=lang2, country=country2)
     
-    # Comparaison des SERPs
-    result = compare_serps(serp1, serp2)
+    # Affichage des résultats
+    st.write(f"Top 100 SERP pour {keyword1} en {lang1}-{country1} :")
+    st.write(results1)
     
-    st.write(f"Nombre d'URLs en commun : {result['common_urls']}")
-    st.write(f"Nombre de domaines en commun : {result['common_domains']}")
-    st.write(f"URLs nouvelles : {result['new']}")
-    st.write(f"URLs améliorées : {result['improved']}")
-    st.write(f"URLs perdues : {result['lost']}")
-    st.write(f"URLs déclinées : {result['declined']}")
+    st.write(f"Top 100 SERP pour {keyword2} en {lang2}-{country2} :")
+    st.write(results2)
     
-    # Visualisation graphique des flèches
-    st.plotly_chart(plot_evolution(serp1, serp2))
+    # Calcul des URL et des domaines en commun
+    common_urls = set(results1) & set(results2)
+    common_domains = set([url.split('/')[2] for url in results1]) & set([url.split('/')[2] for url in results2])
+    
+    st.write(f"Nombre d'URLs en commun : {len(common_urls)}")
+    st.write(f"Nombre de domaines en commun : {len(common_domains)}")
+    
+    # Graphique des changements et similarité
+    # ... ici on peut ajouter la logique de comparaison entre SERPs et l'affichage avec Plotly
+    
+    # Exemple de calcul du taux de similarité
+    similarity_rate = len(common_urls) / min(len(results1), len(results2)) * 100
+    st.write(f"Taux de similarité entre les SERPs : {similarity_rate:.2f}%")
