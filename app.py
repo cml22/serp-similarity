@@ -5,20 +5,23 @@ import pycountry
 
 # Fonction pour récupérer les SERPs
 def get_serp(keyword, language, country):
-    # Ici, vous devez ajouter la logique pour scraper les résultats SERP
-    # Cette fonction retourne une liste d'URLs pour le mot-clé donné
-    return []
+    # Ajoutez votre logique pour scraper les résultats SERP
+    return []  # Remplacez cette ligne par le code de scraping
 
 # Fonction pour comparer les SERPs
 def compare_serps(serp1, serp2):
-    # Ajouter la logique pour comparer les SERPs
-    return {}
+    # Ajoutez votre logique pour comparer les SERPs
+    return {
+        'similarity_rate': 75,  # Exemple de taux de similarité
+        'common_urls_count': 5,  # Exemple de nombre d'URLs communes
+        'common_urls': ['https://example.com', 'https://example.org']  # Exemple d'URLs communes
+    }
 
 # Configuration de Streamlit
 st.title("Analyse de Similarité SERP")
 
-# Sélection des langues et des pays
-languages = [(lang.alpha_2, lang.name) for lang in pycountry.LANGUAGES.values()]
+# Récupération des langues
+languages = [(lang.alpha_2, lang.name) for lang in pycountry.languages]
 countries = [(country.alpha_2, country.name) for country in pycountry.countries]
 
 # Entrée pour les mots-clés
