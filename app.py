@@ -117,21 +117,22 @@ if st.button("Analyze"):
 
         # Display results
         st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
-        
-# Summary on keyword usage
-if counts['common_both'] > 0:
-    st.success("Les deux mots-clés semblent contribuer à être une URL commune dans le titre.")
-elif keyword1 in keyword2:
-    st.warning(f"**{keyword2}** est plus spécifique que **{keyword1}**. Considérez d'utiliser le mot-clé plus spécifique pour mieux cibler votre audience.")
-elif counts['common_keyword1'] > counts['common_keyword2']:
-    st.warning(f"Il serait préférable d'inclure **{keyword1}** dans votre titre pour optimiser votre classement.")
-elif counts['common_keyword2'] > counts['common_keyword1']:
-    st.warning(f"Il serait préférable d'inclure **{keyword2}** dans votre titre pour optimiser votre classement.")
-else:
-    st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
 
-        st.markdown("---")
-        st.subheader("SERP Results")
+        # Résumé sur l'utilisation des mots-clés
+        if counts['common_both'] > 0:
+            st.success("Les deux mots-clés semblent contribuer à être une URL commune dans le titre.")
+        elif keyword1 in keyword2:
+            st.warning(f"**{keyword2}** est plus spécifique que **{keyword1}**. Considérez d'utiliser le mot-clé plus spécifique pour mieux cibler votre audience.")
+        elif counts['common_keyword1'] > counts['common_keyword2']:
+            st.warning(f"Il serait préférable d'inclure **{keyword1}** dans votre titre pour optimiser votre classement.")
+        elif counts['common_keyword2'] > counts['common_keyword1']:
+            st.warning(f"Il serait préférable d'inclure **{keyword2}** dans votre titre pour optimiser votre classement.")
+        else:
+            st.info("Aucun des mots-clés ne semble efficace seul. Envisagez d'autres optimisations.")
+
+st.markdown("---")  # Cette ligne doit être alignée avec le début de la condition
+st.subheader("SERP Results")  # Idem ici
+
         
         # Display search links with encoded keywords and the correct language/country
         encoded_keyword1 = urllib.parse.quote(keyword1)
