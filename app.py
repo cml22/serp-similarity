@@ -65,26 +65,24 @@ if st.button("Analyser"):
         # Calculer la similarité
         common_urls, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
 
-        # Affichage des résultats de similarité
+        # Affichage du taux de similarité
         st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
+
+        # Affichage des résultats de SERP sous forme d'accordéon
+        with st.expander("Afficher SERP pour le Mot-clé 1"):
+            st.write("**SERP pour le Mot-clé 1**")
+            for result in results_keyword1:
+                st.write(result)
+
+        with st.expander("Afficher SERP pour le Mot-clé 2"):
+            st.write("**SERP pour le Mot-clé 2**")
+            for result in results_keyword2:
+                st.write(result)
+
+        # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
             st.write(url)
-
-        # Création de colonnes pour afficher les SERPs
-        col3, col4 = st.columns(2)
-
-        with col3:
-            if st.button("Afficher SERP pour Mot-clé 1"):
-                st.write("**SERP pour le Mot-clé 1**")
-                for result in results_keyword1:
-                    st.write(result)
-
-        with col4:
-            if st.button("Afficher SERP pour Mot-clé 2"):
-                st.write("**SERP pour le Mot-clé 2**")
-                for result in results_keyword2:
-                    st.write(result)
 
     else:
         st.error("Veuillez entrer les deux mots-clés.")
