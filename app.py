@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
@@ -19,12 +18,7 @@ st.markdown('Tool made with ❤️ by [Charles Migaud](https://charles-migaud.fr
 
 def scrape_serp(keyword, language, country):
     query = urllib.parse.quote(keyword)
-    
-    # Update the country code for the UK
-    if country == "gb":
-        country = "co.uk"
-        
-    url = f"https://www.google.{country}/search?q={query}&hl={language}"
+    url = f"https://www.google.com/search?q={query}&hl={language}&gl={country}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
@@ -95,12 +89,12 @@ col1, col2 = st.columns(2)
 with col1:
     keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
     language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country1 = st.selectbox("Country (Keyword 1):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    country1 = st.selectbox("Country (Keyword 1):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
 
 with col2:
     keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
     language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Country (Keyword 2):", ["fr", "co.uk", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    country2 = st.selectbox("Country (Keyword 2):", ["FR", "GB", "US", "CA", "ES", "DE", "IT", "PT", "PL", "MA", "SN", "TN"])
 
 st.markdown("---")
 
@@ -132,11 +126,17 @@ if st.button("Analyze"):
         st.markdown("---")
         st.subheader("SERP Results")
         
-        # Display search links with encoded keywords
+        # Display search links with encoded keywords and the correct language/country
         encoded_keyword1 = urllib.parse.quote(keyword1)
         encoded_keyword2 = urllib.parse.quote(keyword2)
-        st.markdown(f"[View SERP for Keyword: {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
-        st.markdown(f"[View SERP for Keyword: {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
+
+        # Generate SERP links with language and country parameters
+        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}"
+        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}"
+
+        # Display the clickable links for the SERPs
+        st.markdown(f"[View SERP for Keyword: {keyword1}]({serp_url1})")
+        st.markdown(f"[View SERP for Keyword: {keyword2}]({serp_url2})")
 
         # Display SERP results
         with st.expander(f"Details for Keyword: {keyword1}"):
