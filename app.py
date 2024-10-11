@@ -24,9 +24,12 @@ with col2:
 if st.button("Analyser"):
     # Placeholder pour les résultats
     with st.spinner("Analyse en cours..."):
-        # Simulation des résultats pour les SERP
-        urls1 = ["https://example.com/page1", "https://example.com/page2"]
-        urls2 = ["https://example.com/page2", "https://example.com/page3"]
+        # Simulation des résultats pour les SERP (remplacer cette partie par le scraping réel)
+        # Ici nous utilisons les mots-clés pour simuler les résultats
+        urls1 = [f"https://example.com/{keyword1.replace(' ', '-')}-result-1", 
+                  f"https://example.com/{keyword1.replace(' ', '-')}-result-2"]
+        urls2 = [f"https://example.com/{keyword2.replace(' ', '-')}-result-1", 
+                  f"https://example.com/{keyword2.replace(' ', '-')}-result-2"]
 
         # Calcul des résultats
         similar_urls = set(urls1) & set(urls2)
@@ -53,3 +56,7 @@ if st.button("Analyser"):
         st.subheader("Évolution des URLs")
         for url in similar_urls:
             st.write(f"🔗 {url} - Stable")
+
+        # Si aucune URL commune
+        if not similar_urls:
+            st.write("Aucune URL commune entre les deux mots-clés.")
