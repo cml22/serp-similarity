@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# Doit être absolument la première commande Streamlit
+st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
+
 # Purpose of the tool
 st.write("## Purpose")
 st.write("This tool compares the similarity of SERPs (Search Engine Results Pages) for two different keywords. It helps determine whether a new page should be created or if an existing page should be optimized based on the overlap of search results.")
@@ -77,7 +80,6 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # User Interface with Streamlit
-st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
 st.title("SERP Similarity Analysis")
 st.markdown("---")
 
