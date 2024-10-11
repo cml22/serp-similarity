@@ -27,14 +27,14 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Mot-clé 1")
-    keyword1 = st.text_input("Entrez le mot-clé 1")
+    keyword1 = st.text_input("Entrez le mot-clé 1", value="exemple mot-clé 1")  # Valeur par défaut pour test
     lang1 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"], index=0)
     country1 = st.selectbox("Pays", options=["FR", "US", "GB", "DE", "IT"], index=0)
 
 # Colonne pour le mot-clé 2
 with col2:
     st.subheader("Mot-clé 2")
-    keyword2 = st.text_input("Entrez le mot-clé 2")
+    keyword2 = st.text_input("Entrez le mot-clé 2", value="exemple mot-clé 2")  # Valeur par défaut pour test
     lang2 = st.selectbox("Langue", options=["fr", "en", "es", "de", "it"], index=0)
     country2 = st.selectbox("Pays", options=["FR", "US", "GB", "DE", "IT"], index=0)
 
