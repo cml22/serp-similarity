@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# Configuration de la page doit être la première commande
+st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
+
 # Purpose of the tool
 st.markdown("""
 ## Objectif de l'outil
@@ -76,7 +79,6 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
 st.title("Analyse de Similarité SERP")
 st.markdown("---")  # Ligne de séparation
 
