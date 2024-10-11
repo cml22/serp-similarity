@@ -18,9 +18,9 @@ def scrape_serp(keyword, lang, country):
 
 st.title("Analyse de Similarité SERP")
 
-# Entrée des mots-clés
-keyword1 = st.text_input("Entrez le mot-clé 1")
-keyword2 = st.text_input("Entrez le mot-clé 2")
+# Entrée des mots-clés sans pré-remplissage
+keyword1 = st.text_input("Entrez le mot-clé 1", "")
+keyword2 = st.text_input("Entrez le mot-clé 2", "")
 lang1 = st.selectbox("Langue du mot-clé 1", options=["fr", "en", "es", "de", "it"], index=0)
 lang2 = st.selectbox("Langue du mot-clé 2", options=["fr", "en", "es", "de", "it"], index=0)
 
@@ -38,18 +38,18 @@ if st.button("Analyser"):
     st.write(f"Taux de similarité : {similarity_rate:.2f}%")
     st.write(f"URLs communes : {len(common_urls)}")
 
-    # Affichage des URLs
+    # Affichage des URLs dans deux colonnes
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader(f"URLs pour le mot-clé 1 : {keyword1}")
         for url in urls1:
-            st.write(url)
+            st.markdown(f"[{url}]({url})")  # Affichage des URLs en tant que liens cliquables
     
     with col2:
         st.subheader(f"URLs pour le mot-clé 2 : {keyword2}")
         for url in urls2:
-            st.write(url)
+            st.markdown(f"[{url}]({url})")  # Affichage des URLs en tant que liens cliquables
     
     # Affichage des URLs communes
     st.subheader("URLs communes")
@@ -58,12 +58,16 @@ if st.button("Analyser"):
 
     # Comparaison visuelle
     st.subheader("Comparaison des SERPs")
-    for url in urls1:
-        if url in urls2:
-            st.write(f"🔄 {url} (Commun)")
-        else:
-            st.write(f"⬇️ {url} (Non trouvé dans {keyword2})")
+    comparison_df = pd.DataFrame({
+        'URL': urls1 + urls2,
+        'Position Mot-clé 1': [1 + urls1.index(url) if url in urls1 else None for url in urls1 + urls2],
+        'Position Mot-clé 2': [1 + urls2.index(url) if url in urls2 else None for url in urls1 + urls2]
+    }).dropna()
 
-    for url in urls2:
-        if url not in urls1:
-            st.write(f"⬆️ {url} (Non trouvé dans {keyword1})")
+    for index, row in comparison_df.iterrows():
+        if row['Position Mot-clé 1'] == row['Position Mot-clé 2']:
+            st.write(f"🔄 {row['URL']} (Stable)")
+        elif row['Position Mot-clé 1'] < row['Position Mot-clé 2']:
+            st.write(f"⬆️ {row['URL']} (Améliorée de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
+        else:
+            st.write(f"⬇️ {row['URL']} (Diminution de {row['Position Mot-clé 1']} à {row['Position Mot-clé 2']})")
