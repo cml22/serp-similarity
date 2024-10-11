@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import pycountry
 
 def fetch_serp(keyword, lang, country):
     # Remplacez ceci par l'URL de votre moteur de recherche et les paramètres appropriés
@@ -24,16 +23,38 @@ def main():
     keyword2 = st.text_input("Entrez le mot-clé 2")
 
     # Sélection des langues
-    languages = [(lang.alpha_2, lang.name) for lang in pycountry.languages.values()]
-    language_options = sorted(languages, key=lambda x: x[1])
-    selected_lang1 = st.selectbox("Langue du mot-clé 1", options=language_options, format_func=lambda x: x[1])
-    selected_lang2 = st.selectbox("Langue du mot-clé 2", options=language_options, format_func=lambda x: x[1])
+    languages = [
+        ('fr', 'Français'),
+        ('en', 'Anglais'),
+        ('es', 'Espagnol'),
+        ('de', 'Allemand'),
+        ('it', 'Italien'),
+        ('pt', 'Portugais'),
+        ('ru', 'Russe'),
+        ('ja', 'Japonais'),
+        ('zh', 'Chinois'),
+        # Ajoutez d'autres langues selon vos besoins
+    ]
+    
+    selected_lang1 = st.selectbox("Langue du mot-clé 1", options=languages, format_func=lambda x: x[1])
+    selected_lang2 = st.selectbox("Langue du mot-clé 2", options=languages, format_func=lambda x: x[1])
 
     # Sélection des pays
-    countries = [(country.alpha_2, country.name) for country in pycountry.countries]
-    country_options = sorted(countries, key=lambda x: x[1])
-    selected_country1 = st.selectbox("Pays du mot-clé 1", options=country_options, format_func=lambda x: x[1])
-    selected_country2 = st.selectbox("Pays du mot-clé 2", options=country_options, format_func=lambda x: x[1])
+    countries = [
+        ('FR', 'France'),
+        ('US', 'États-Unis'),
+        ('ES', 'Espagne'),
+        ('DE', 'Allemagne'),
+        ('IT', 'Italie'),
+        ('PT', 'Portugal'),
+        ('RU', 'Russie'),
+        ('JP', 'Japon'),
+        ('CN', 'Chine'),
+        # Ajoutez d'autres pays selon vos besoins
+    ]
+    
+    selected_country1 = st.selectbox("Pays du mot-clé 1", options=countries, format_func=lambda x: x[1])
+    selected_country2 = st.selectbox("Pays du mot-clé 2", options=countries, format_func=lambda x: x[1])
 
     if st.button("Analyser"):
         if keyword1 and keyword2:
