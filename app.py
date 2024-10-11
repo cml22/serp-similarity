@@ -5,7 +5,8 @@ import pandas as pd
 from collections import Counter
 import langcodes
 
-def scrape_serp(query, lang="en", region="us"):
+def scrape_serp(query, lang="en", region="fr"):
+    # Construction de l'URL de recherche
     url = f"https://www.google.{region}/search?q={query}&hl={lang}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -13,10 +14,11 @@ def scrape_serp(query, lang="en", region="us"):
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
     results = []
-    
+
+    # Extraction des URLs des résultats de recherche
     for item in soup.find_all('h3'):
         parent = item.find_parent("a")
-        if parent:
+        if parent and 'href' in parent.attrs:
             results.append(parent['href'])
 
     return results
