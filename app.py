@@ -3,60 +3,64 @@ import requests
 from bs4 import BeautifulSoup
 import pycountry
 
-# Fonction pour récupérer les SERPs
-def get_serp(keyword, language, country):
-    # Ajoutez votre logique pour scraper les résultats SERP
-    return []  # Remplacez cette ligne par le code de scraping
-
-# Fonction pour comparer les SERPs
-def compare_serps(serp1, serp2):
-    # Ajoutez votre logique pour comparer les SERPs
-    return {
-        'similarity_rate': 75,  # Exemple de taux de similarité
-        'common_urls_count': 5,  # Exemple de nombre d'URLs communes
-        'common_urls': ['https://example.com', 'https://example.org']  # Exemple d'URLs communes
+def fetch_serp(keyword, lang, country):
+    # Remplacez ceci par l'URL de votre moteur de recherche et les paramètres appropriés
+    url = f"https://www.google.com/search?q={keyword}&hl={lang}&gl={country}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     }
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+    
+    # Ici, nous supposons que les résultats SERP sont dans des balises <h3>
+    results = soup.find_all("h3")
+    return [result.get_text() for result in results]
 
-# Configuration de Streamlit
-st.title("Analyse de Similarité SERP")
+def main():
+    st.title("Analyse de Similarité SERP")
+    
+    # Entrée pour les mots-clés
+    keyword1 = st.text_input("Entrez le mot-clé 1")
+    keyword2 = st.text_input("Entrez le mot-clé 2")
 
-# Récupération des langues
-languages = [(lang.alpha_2, lang.name) for lang in pycountry.languages]
-countries = [(country.alpha_2, country.name) for country in pycountry.countries]
+    # Sélection des langues
+    languages = [(lang.alpha_2, lang.name) for lang in pycountry.languages.values()]
+    language_options = sorted(languages, key=lambda x: x[1])
+    selected_lang1 = st.selectbox("Langue du mot-clé 1", options=language_options, format_func=lambda x: x[1])
+    selected_lang2 = st.selectbox("Langue du mot-clé 2", options=language_options, format_func=lambda x: x[1])
 
-# Entrée pour les mots-clés
-keyword1 = st.text_input("Entrez le mot-clé 1", "")
-keyword2 = st.text_input("Entrez le mot-clé 2", "")
+    # Sélection des pays
+    countries = [(country.alpha_2, country.name) for country in pycountry.countries]
+    country_options = sorted(countries, key=lambda x: x[1])
+    selected_country1 = st.selectbox("Pays du mot-clé 1", options=country_options, format_func=lambda x: x[1])
+    selected_country2 = st.selectbox("Pays du mot-clé 2", options=country_options, format_func=lambda x: x[1])
 
-# Sélection de la langue et du pays pour le mot-clé 1
-lang1 = st.selectbox("Langue du mot-clé 1", options=languages, format_func=lambda x: x[1])
-country1 = st.selectbox("Pays du mot-clé 1", options=countries, format_func=lambda x: x[1])
+    if st.button("Analyser"):
+        if keyword1 and keyword2:
+            # Récupération des résultats SERP
+            serp1 = fetch_serp(keyword1, selected_lang1[0], selected_country1[0])
+            serp2 = fetch_serp(keyword2, selected_lang2[0], selected_country2[0])
 
-# Sélection de la langue et du pays pour le mot-clé 2
-lang2 = st.selectbox("Langue du mot-clé 2", options=languages, format_func=lambda x: x[1])
-country2 = st.selectbox("Pays du mot-clé 2", options=countries, format_func=lambda x: x[1])
+            # Comparaison des résultats
+            common_urls = set(serp1).intersection(set(serp2))
+            similarity_rate = len(common_urls) / max(len(serp1), len(serp2)) * 100 if max(len(serp1), len(serp2)) > 0 else 0
+            
+            st.write(f"Taux de similarité : {similarity_rate:.2f}%")
+            st.write(f"URLs communes : {len(common_urls)}")
+            
+            st.subheader(f"Top résultats pour '{keyword1}'")
+            for url in serp1:
+                st.write(url)
+                
+            st.subheader(f"Top résultats pour '{keyword2}'")
+            for url in serp2:
+                st.write(url)
 
-# Bouton pour lancer l'analyse
-if st.button("Analyser"):
-    if keyword1 and keyword2:
-        serp1 = get_serp(keyword1, lang1[0], country1[0])
-        serp2 = get_serp(keyword2, lang2[0], country2[0])
-        results = compare_serps(serp1, serp2)
+            st.subheader("URLs communes")
+            for url in common_urls:
+                st.write(url)
+        else:
+            st.error("Veuillez entrer les deux mots-clés pour l'analyse.")
 
-        # Affichage des résultats
-        st.write("Résultats de l'analyse")
-        st.write(f"Taux de similarité : {results.get('similarity_rate', 0)}%")
-        st.write(f"URLs communes : {results.get('common_urls_count', 0)}")
-
-        st.subheader("Top 10 Mot-clé 1")
-        for url in serp1:
-            st.markdown(f"- [{url}]({url})")
-
-        st.subheader("Top 10 Mot-clé 2")
-        for url in serp2:
-            st.markdown(f"- [{url}]({url})")
-
-        # Affichage des URLs communes
-        st.subheader("URLs communes")
-        for url in results.get('common_urls', []):
-            st.markdown(f"- [{url}]({url})")
+if __name__ == "__main__":
+    main()
