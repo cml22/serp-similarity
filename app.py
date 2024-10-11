@@ -62,7 +62,7 @@ def calculate_similarity(results1, results2):
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
 # Interface utilisateur avec Streamlit
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="wide")
+st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
 st.title("Analyse de Similarité SERP")
 st.markdown("---")  # Ligne de séparation
 
@@ -109,13 +109,17 @@ if st.button("Analyser"):
         st.markdown("---")  # Ligne de séparation
         st.subheader("Résultats des SERP")
         
+        # Affichage des liens de recherche
+        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword1}](https://www.google.com/search?q={keyword1})")
+        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword2}](https://www.google.com/search?q={keyword2})")
+
         # Affichage des résultats de SERP
-        with st.expander(f"Afficher SERP pour le mot-clé : {keyword1}"):
+        with st.expander(f"Détails SERP pour le mot-clé : {keyword1}"):
             st.write(f"**SERP pour le mot-clé : {keyword1}**")
             for url, title in results_keyword1:
                 st.markdown(f"- [{title}]({url})")  # Lien cliquable
 
-        with st.expander(f"Afficher SERP pour le mot-clé : {keyword2}"):
+        with st.expander(f"Détails SERP pour le mot-clé : {keyword2}"):
             st.write(f"**SERP pour le mot-clé : {keyword2}**")
             for url, title in results_keyword2:
                 st.markdown(f"- [{title}]({url})")  # Lien cliquable
