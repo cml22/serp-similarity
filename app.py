@@ -31,17 +31,20 @@ def scrape_serp(keyword, language, country):
     return url, results  # Retourne également l'URL de recherche
 
 def calculate_similarity(results1, results2):
-    # Calcul des URLs communes
+    # Calcul des URLs communes et uniques
     urls1 = {result[0]: result[1] for result in results1}
     urls2 = {result[0]: result[1] for result in results2}
 
     common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
+    unique_urls1 = set(urls1.keys()) - set(urls2.keys())
+    unique_urls2 = set(urls2.keys()) - set(urls1.keys())
+    
     total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
 
     # Taux de similarité
     similarity_rate = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
     
-    return list(common_urls), similarity_rate, len(common_urls), urls1, urls2
+    return list(common_urls), similarity_rate, len(common_urls), urls1, urls2, list(unique_urls1), list(unique_urls2)
 
 # Interface utilisateur avec Streamlit
 st.title("Analyse de Similarité SERP")
@@ -66,7 +69,7 @@ if st.button("Analyser"):
         url2, results_keyword2 = scrape_serp(keyword2, language2, country2)
 
         # Calculer la similarité
-        common_urls, similarity_rate, common_count, urls1, urls2 = calculate_similarity(results_keyword1, results_keyword2)
+        common_urls, similarity_rate, common_count, urls1, urls2, unique_urls1, unique_urls2 = calculate_similarity(results_keyword1, results_keyword2)
 
         # Affichage du taux de similarité avec le nombre d'URLs communes
         st.write(f"**Taux de similarité : {similarity_rate:.2f}% ({common_count} URLs communes)**")
@@ -79,17 +82,26 @@ if st.button("Analyser"):
         with st.expander("Afficher SERP pour le Mot-clé 1"):
             st.write("**SERP pour le Mot-clé 1**")
             for url, title in results_keyword1:
-                st.write(f"[{title}]({url})")
+                st.write(url)  # Afficher seulement les URLs
 
         with st.expander("Afficher SERP pour le Mot-clé 2"):
             st.write("**SERP pour le Mot-clé 2**")
             for url, title in results_keyword2:
-                st.write(f"[{title}]({url})")
+                st.write(url)  # Afficher seulement les URLs
 
         # Affichage des URLs communes
         st.write("**URLs communes**")
         for url in common_urls:
-            st.write(f"[{urls1[url]}]({url})")
+            st.write(url)  # Afficher seulement les URLs
+
+        # Affichage des URLs uniques pour chaque mot-clé
+        with st.expander("URLs uniquement présentes pour le Mot-clé 1"):
+            for url in unique_urls1:
+                st.write(url)  # Afficher seulement les URLs uniques
+
+        with st.expander("URLs uniquement présentes pour le Mot-clé 2"):
+            for url in unique_urls2:
+                st.write(url)  # Afficher seulement les URLs uniques
 
     else:
         st.error("Veuillez entrer les deux mots-clés.")
