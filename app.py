@@ -68,12 +68,12 @@ st.title("Analyse de Similarité SERP")
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Mot-clé 1 :")
+    keyword1 = st.text_input("Entrer le Mot-clé 1 :")
     language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt"])
     country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
-    keyword2 = st.text_input("Mot-clé 2 :")
+    keyword2 = st.text_input("Entrer le Mot-clé 2 :")
     language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt"])
     country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
@@ -96,20 +96,20 @@ if st.button("Analyser"):
         if counts['common_both'] > 0:
             st.success("Les deux mots-clés dans le titre semblent contribuer à être une URL commune.")
         elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"Il serait préférable d'inclure le **Mot-clé 1** dans votre title pour optimiser votre classement.")
+            st.warning(f"Il serait préférable d'inclure le **{keyword1}** dans votre title pour optimiser votre classement.")
         elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"Il serait préférable d'inclure le **Mot-clé 2** dans votre title pour optimiser votre classement.")
+            st.warning(f"Il serait préférable d'inclure le **{keyword2}** dans votre title pour optimiser votre classement.")
         else:
             st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
 
         # Affichage des résultats de SERP
-        with st.expander("Afficher SERP pour le Mot-clé 1"):
-            st.write("**SERP pour le Mot-clé 1**")
+        with st.expander(f"Afficher SERP pour le mot-clé : {keyword1}"):
+            st.write(f"**SERP pour le mot-clé : {keyword1}**")
             for url, title in results_keyword1:
                 st.write(f"{url} - {title}")
 
-        with st.expander("Afficher SERP pour le Mot-clé 2"):
-            st.write("**SERP pour le Mot-clé 2**")
+        with st.expander(f"Afficher SERP pour le mot-clé : {keyword2}"):
+            st.write(f"**SERP pour le mot-clé : {keyword2}**")
             for url, title in results_keyword2:
                 st.write(f"{url} - {title}")
 
@@ -119,12 +119,12 @@ if st.button("Analyser"):
             st.write(url)
 
         # Affichage des URLs uniquement présentes pour le Mot-clé 1
-        with st.expander("URLs uniquement pour le Mot-clé 1"):
+        with st.expander(f"URLs uniquement pour le mot-clé : {keyword1}"):
             for url in non_common_urls1:
                 st.write(url)
 
         # Affichage des URLs uniquement présentes pour le Mot-clé 2
-        with st.expander("URLs uniquement pour le Mot-clé 2"):
+        with st.expander(f"URLs uniquement pour le mot-clé : {keyword2}"):
             for url in non_common_urls2:
                 st.write(url)
 
