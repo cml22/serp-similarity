@@ -14,7 +14,7 @@ def scrape_serp(keyword, language, country):
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        st.error("Erreur lors de la récupération des résultats.")
+        st.error("Error while fetching the results.")
         return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -23,7 +23,7 @@ def scrape_serp(keyword, language, country):
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
         if link:
-            title = g.find('h3').get_text() if g.find('h3') else "Titre non trouvé"
+            title = g.find('h3').get_text() if g.find('h3') else "Title not found"
             results.append((link['href'], title))
 
     return results
@@ -61,85 +61,85 @@ def calculate_similarity(results1, results2):
     
     return common_urls, non_common_urls1, non_common_urls2, similarity_rate
 
-# Interface utilisateur avec Streamlit
-st.set_page_config(page_title="Analyse de Similarité SERP", layout="centered")
-st.title("Analyse de Similarité SERP")
-st.markdown("---")  # Ligne de séparation
+# User interface with Streamlit
+st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
+st.title("SERP Similarity Analysis")
+st.markdown("---")  # Separator line
 
-# Entrée des mots-clés
+# Input for keywords
 col1, col2 = st.columns(2)
 
 with col1:
-    keyword1 = st.text_input("Entrer le Mot-clé 1 :", placeholder="Ex: marketing digital")
-    language1 = st.selectbox("Langue (Mot-clé 1) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country1 = st.selectbox("Pays (Mot-clé 1) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    keyword1 = st.text_input("Enter Keyword 1:", placeholder="Ex: digital marketing")
+    language1 = st.selectbox("Language (Keyword 1):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country1 = st.selectbox("Country (Keyword 1):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
 with col2:
-    keyword2 = st.text_input("Entrer le Mot-clé 2 :", placeholder="Ex: SEO")
-    language2 = st.selectbox("Langue (Mot-clé 2) :", ["fr", "en", "es", "de", "it", "pt", "pl"])
-    country2 = st.selectbox("Pays (Mot-clé 2) :", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
+    keyword2 = st.text_input("Enter Keyword 2:", placeholder="Ex: SEO")
+    language2 = st.selectbox("Language (Keyword 2):", ["fr", "en", "es", "de", "it", "pt", "pl"])
+    country2 = st.selectbox("Country (Keyword 2):", ["fr", "gb", "us", "ca", "es", "de", "it", "pt", "pl", "ma", "sn", "tn"])
 
-st.markdown("---")  # Ligne de séparation
+st.markdown("---")  # Separator line
 
-if st.button("Analyser"):
+if st.button("Analyze"):
     if keyword1 and keyword2:
-        # Scraper les résultats pour les deux mots-clés
+        # Scrape results for both keywords
         results_keyword1 = scrape_serp(keyword1, language1, country1)
         results_keyword2 = scrape_serp(keyword2, language2, country2)
 
-        # Calculer la similarité
+        # Calculate similarity
         common_urls, non_common_urls1, non_common_urls2, similarity_rate = calculate_similarity(results_keyword1, results_keyword2)
 
-        # Analyser les titres
+        # Analyze titles
         counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
 
-        # Affichage des résultats
-        st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
+        # Display results
+        st.write(f"**Similarity Rate: {similarity_rate:.2f}%**")
         
-        # Résumé sur l'utilisation des mots-clés
+        # Summary on keyword usage
         if counts['common_both'] > 0:
-            st.success("Les deux mots-clés dans le titre semblent contribuer à être une URL commune.")
+            st.success("Both keywords in the title seem to contribute to being a common URL.")
         elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"Il serait préférable d'inclure le **{keyword1}** dans votre title pour optimiser votre classement.")
+            st.warning(f"It would be better to include **{keyword1}** in your title for better optimization.")
         elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"Il serait préférable d'inclure le **{keyword2}** dans votre title pour optimiser votre classement.")
+            st.warning(f"It would be better to include **{keyword2}** in your title for better optimization.")
         else:
-            st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
+            st.info("Neither of the keywords seems to be effective alone. Consider other optimizations.")
 
-        st.markdown("---")  # Ligne de séparation
-        st.subheader("Résultats des SERP")
+        st.markdown("---")  # Separator line
+        st.subheader("SERP Results")
         
-        # Affichage des liens de recherche avec encodage
+        # Display search links with encoding
         encoded_keyword1 = urllib.parse.quote(keyword1)
         encoded_keyword2 = urllib.parse.quote(keyword2)
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
-        st.markdown(f"[Afficher SERP pour le mot-clé : {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
+        st.markdown(f"[View SERP for Keyword: {keyword1}](https://www.google.com/search?q={encoded_keyword1})")
+        st.markdown(f"[View SERP for Keyword: {keyword2}](https://www.google.com/search?q={encoded_keyword2})")
 
-        # Affichage des résultats de SERP
-        with st.expander(f"Détails SERP pour le mot-clé : {keyword1}"):
-            st.write(f"**SERP pour le mot-clé : {keyword1}**")
+        # Display SERP results
+        with st.expander(f"Details SERP for Keyword: {keyword1}"):
+            st.write(f"**SERP for Keyword: {keyword1}**")
             for url, title in results_keyword1:
-                st.markdown(f"- [{title}]({url})")  # Lien cliquable
+                st.markdown(f"- [{title}]({url})")  # Clickable link
 
-        with st.expander(f"Détails SERP pour le mot-clé : {keyword2}"):
-            st.write(f"**SERP pour le mot-clé : {keyword2}**")
+        with st.expander(f"Details SERP for Keyword: {keyword2}"):
+            st.write(f"**SERP for Keyword: {keyword2}**")
             for url, title in results_keyword2:
-                st.markdown(f"- [{title}]({url})")  # Lien cliquable
+                st.markdown(f"- [{title}]({url})")  # Clickable link
 
-        st.markdown("---")  # Ligne de séparation
-        st.subheader("URLs communes")
+        st.markdown("---")  # Separator line
+        st.subheader("Common URLs")
         for url in common_urls:
             st.write(url)
 
-        # Affichage des URLs uniquement présentes pour le Mot-clé 1
-        with st.expander(f"URLs uniquement pour le mot-clé : {keyword1}"):
+        # Display URLs only present for Keyword 1
+        with st.expander(f"URLs only for Keyword: {keyword1}"):
             for url in non_common_urls1:
                 st.write(url)
 
-        # Affichage des URLs uniquement présentes pour le Mot-clé 2
-        with st.expander(f"URLs uniquement pour le mot-clé : {keyword2}"):
+        # Display URLs only present for Keyword 2
+        with st.expander(f"URLs only for Keyword: {keyword2}"):
             for url in non_common_urls2:
                 st.write(url)
 
     else:
-        st.error("Veuillez entrer les deux mots-clés.")
+        st.error("Please enter both keywords.")
