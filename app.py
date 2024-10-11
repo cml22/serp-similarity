@@ -4,11 +4,9 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 def scrape_serp(keyword, language, country):
-    # Construction de l'URL de recherche
     query = urllib.parse.quote(keyword)
     url = f"https://www.google.{country}/search?q={query}&hl={language}"
 
-    # En-têtes pour simuler un navigateur Chrome
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, KHTML, Gecko) Chrome/116.0.5845.96 Safari/537.36"
     }
@@ -21,7 +19,6 @@ def scrape_serp(keyword, language, country):
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Extraction des URLs des résultats de recherche et des titres
     results = []
     for g in soup.find_all('div', class_='g'):
         link = g.find('a', href=True)
@@ -32,34 +29,22 @@ def scrape_serp(keyword, language, country):
     return results
 
 def analyze_titles(results, keyword1, keyword2):
-    # Compter les occurrences des mots-clés dans les titres
     counts = {
         "common_keyword1": 0,
         "common_keyword2": 0,
         "common_both": 0,
-        "non_common_keyword1": 0,
-        "non_common_keyword2": 0,
     }
 
-    # Dictionnaires pour séparer les URLs communes et non communes
     urls_common = {url: title for url, title in results[0]}  # SERP 1
     urls_non_common = {url: title for url, title in results[1]}  # SERP 2
 
-    # Analyser les titres des URLs communes
     for url, title in urls_common.items():
-        if keyword1.lower() in title.lower() and url in urls_non_common:
+        if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
             counts["common_both"] += 1
         elif keyword1.lower() in title.lower():
             counts["common_keyword1"] += 1
         elif keyword2.lower() in title.lower():
             counts["common_keyword2"] += 1
-
-    # Analyser les titres des URLs non communes
-    for url, title in urls_non_common.items():
-        if keyword1.lower() in title.lower():
-            counts["non_common_keyword1"] += 1
-        elif keyword2.lower() in title.lower():
-            counts["non_common_keyword2"] += 1
 
     return counts
 
@@ -106,11 +91,16 @@ if st.button("Analyser"):
 
         # Affichage des résultats
         st.write(f"**Taux de similarité : {similarity_rate:.2f}%**")
-        st.write(f"**URLs communes contenant uniquement le mot-clé 1 dans le titre : {counts['common_keyword1']}**")
-        st.write(f"**URLs communes contenant uniquement le mot-clé 2 dans le titre : {counts['common_keyword2']}**")
-        st.write(f"**URLs communes contenant les deux mots-clés dans le titre : {counts['common_both']}**")
-        st.write(f"**URLs non communes contenant uniquement le mot-clé 1 dans le titre : {counts['non_common_keyword1']}**")
-        st.write(f"**URLs non communes contenant uniquement le mot-clé 2 dans le titre : {counts['non_common_keyword2']}**")
+        
+        # Résumé sur l'utilisation des mots-clés
+        if counts['common_both'] > 0:
+            st.success("Les deux mots-clés dans le titre semblent contribuer à être une URL commune.")
+        elif counts['common_keyword1'] > counts['common_keyword2']:
+            st.warning(f"Il serait préférable d'inclure le **Mot-clé 1** dans votre title pour optimiser votre classement.")
+        elif counts['common_keyword2'] > counts['common_keyword1']:
+            st.warning(f"Il serait préférable d'inclure le **Mot-clé 2** dans votre title pour optimiser votre classement.")
+        else:
+            st.info("Aucun des mots-clés ne semble être efficace seul. Considérez d'autres optimisations.")
 
         # Affichage des résultats de SERP
         with st.expander("Afficher SERP pour le Mot-clé 1"):
