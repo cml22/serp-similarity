@@ -162,4 +162,3 @@ if st.button("Analyser"):
 
 # Backlink en bas de la page
 st.markdown("---")  # Ligne de séparation
-st.markdown("Développé par [Charles Migaud](https://charles-migaud.fr)")
