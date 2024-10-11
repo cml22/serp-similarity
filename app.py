@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import urllib.parse
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Must be the first Streamlit command
 st.set_page_config(page_title="SERP Similarity Analysis", layout="centered")
@@ -42,43 +43,19 @@ def scrape_serp(keyword, language, country, num_results):
 
     return results
 
-def extract_domain(url):
-    """Extract domain name from URL."""
-    parsed_url = urllib.parse.urlparse(url)
-    return parsed_url.netloc
-
-def analyze_titles(results, keyword1, keyword2):
-    counts = {
-        "common_keyword1": 0,
-        "common_keyword2": 0,
-        "common_both": 0,
-    }
-
-    urls_common = {url: title for url, title in results[0]}
-    urls_non_common = {url: title for url, title in results[1]}
-
-    for url, title in urls_common.items():
-        if keyword1.lower() in title.lower() and keyword2.lower() in title.lower():
-            counts["common_both"] += 1
-        elif keyword1.lower() in title.lower():
-            counts["common_keyword1"] += 1
-        elif keyword2.lower() in title.lower():
-            counts["common_keyword2"] += 1
-
-    return counts
-
 def calculate_similarity(results1, results2):
-    # Extract full URLs
     urls1 = {result[0]: result[1] for result in results1}
     urls2 = {result[0]: result[1] for result in results2}
 
-    # Calculate similarity for URLs
-    common_urls = set(urls1.keys()).intersection(set(urls2.keys()))
-    total_urls = len(set(urls1.keys()).union(set(urls2.keys())))
+    # Initialize the similarity rates for different counts
+    similarity_rates = {}
+    for num_results in range(10, 101, 10):
+        common_urls = set(list(urls1.keys())[:num_results]).intersection(set(list(urls2.keys())[:num_results]))
+        total_urls = len(set(list(urls1.keys())[:num_results]).union(set(list(urls2.keys())[:num_results])))
+        similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
+        similarity_rates[num_results] = similarity_rate_url
 
-    similarity_rate_url = (len(common_urls) / total_urls) * 100 if total_urls > 0 else 0
-    
-    return common_urls, urls1, urls2, similarity_rate_url
+    return similarity_rates
 
 # User Interface with Streamlit
 st.title("SERP Similarity Analysis")
@@ -108,76 +85,22 @@ if st.button("Analyze"):
         results_keyword1 = scrape_serp(keyword1, language1, country1, num_urls)
         results_keyword2 = scrape_serp(keyword2, language2, country2, num_urls)
 
-        # Calculate similarity
-        common_urls, urls1, urls2, similarity_rate_url = calculate_similarity(results_keyword1, results_keyword2)
-
-        # Analyze titles
-        counts = analyze_titles((results_keyword1, results_keyword2), keyword1, keyword2)
+        # Calculate similarity rates for different numbers of results
+        similarity_rates = calculate_similarity(results_keyword1, results_keyword2)
 
         # Display results
-        st.write(f"**Similarity Rate URL: {similarity_rate_url:.2f}%**")
+        for num, rate in similarity_rates.items():
+            st.write(f"**Similarity Rate for Top {num} URLs: {rate:.2f}%**")
 
-        if counts['common_both'] > 0:
-            st.success("The two keywords seem to contribute to a common URL in the title.")
-        elif keyword1 in keyword2:
-            st.warning(f"**{keyword2}** is more specific than **{keyword1}**. Consider using the more specific keyword to better target your audience.")
-        elif counts['common_keyword1'] > counts['common_keyword2']:
-            st.warning(f"It is better to include **{keyword1}** in your title to optimise your ranking.")
-        elif counts['common_keyword2'] > counts['common_keyword1']:
-            st.warning(f"It's better to include **{keyword2}** in your title to optimise your ranking.")
-        else:
-            st.info("None of the keywords seem to be effective on their own. Consider other optimisations.")
+        # Plot similarity rates
+        fig, ax = plt.subplots()
+        ax.plot(list(similarity_rates.keys()), list(similarity_rates.values()), marker='o')
+        ax.set_xlabel("Number of URLs Scraped")
+        ax.set_ylabel("Similarity Rate (%)")
+        ax.set_title("SERP Similarity Rate by Number of URLs")
+        ax.grid()
+        st.pyplot(fig)
 
-        st.markdown("---")
-        st.subheader("SERP Results")
-
-        # Display search links with encoded keywords and the correct language/country
-        encoded_keyword1 = urllib.parse.quote(keyword1)
-        encoded_keyword2 = urllib.parse.quote(keyword2)
-
-        # Generate SERP links with language and country parameters
-        serp_url1 = f"https://www.google.com/search?q={encoded_keyword1}&hl={language1}&gl={country1}&num={num_urls}"
-        serp_url2 = f"https://www.google.com/search?q={encoded_keyword2}&hl={language2}&gl={country2}&num={num_urls}"
-
-        # Display the clickable links for the SERPs
-        st.markdown(f"[View SERP for Keyword: {keyword1}]({serp_url1})")
-        st.markdown(f"[View SERP for Keyword: {keyword2}]({serp_url2})")
-
-        # Display SERP results
-        with st.expander(f"Details for Keyword: {keyword1}"):
-            st.write(f"**SERP for Keyword: {keyword1}**")
-            for rank, (url, title) in enumerate(results_keyword1, start=1):
-                st.markdown(f"{rank}. [{title}]({url})")
-
-        with st.expander(f"Details for Keyword: {keyword2}"):
-            st.write(f"**SERP for Keyword: {keyword2}**")
-            for rank, (url, title) in enumerate(results_keyword2, start=1):
-                st.markdown(f"{rank}. [{title}]({url})")
-
-        # Prepare data for the table
-        common_urls_data = []
-        for url in common_urls:
-            rank_keyword1 = next((i + 1 for i, (u, _) in enumerate(results_keyword1) if u == url), "Not Found")
-            rank_keyword2 = next((i + 1 for i, (u, _) in enumerate(results_keyword2) if u == url), "Not Found")
-            common_urls_data.append({"URL": url, f"Rank in '{keyword1}'": rank_keyword1, f"Rank in '{keyword2}'": rank_keyword2})
-
-        # Display number of common URLs
-        st.write(f"**Number of Common URLs: {len(common_urls)}**")
-
-        # Create a DataFrame for exporting to CSV
-        df_common = pd.DataFrame(common_urls_data)
-
-        # Button to download the common data as CSV
-        st.download_button(
-            label="Download Common URLs CSV",
-            data=df_common.to_csv(index=False).encode('utf-8'),
-            file_name='common_urls.csv',
-            mime='text/csv',
-        )
-
-        # Display common URLs in a table
-        st.dataframe(df_common)
-
+        # Further analysis can be added here...
     else:
         st.error("Please enter both keywords.")
-
