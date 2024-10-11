@@ -69,4 +69,3 @@ if st.button("Analyser"):
     if len(results1) > 0 and len(results2) > 0:
         st.write("Graphique des évolutions entre les SERPs (à venir)...")
         # Code pour créer un graphique avec Matplotlib ici
-
